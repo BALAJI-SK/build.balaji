@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Claude Code
+.claude/
+
+# Agents
+.agents/
+
+# Build output
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+rem
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.DS_Store
+.vscode/
+*.swp

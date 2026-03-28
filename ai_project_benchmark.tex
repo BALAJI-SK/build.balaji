@@ -1,0 +1,200 @@
+\documentclass[10pt, twocolumn, a4paper]{article}
+
+% Required Packages
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}      % For handling figures
+\usepackage{geometry}      % For margins
+\usepackage{amsmath}       % For math formatting
+\usepackage{amssymb}       % For math symbols
+\usepackage{hyperref}      % For hyperlinks
+\usepackage{authblk}       % For author affiliations
+\usepackage{float}         % For figure placement
+\usepackage{url}           % For URL formatting
+
+% Margin Setup
+\geometry{left=0.75in, right=0.75in, top=1in, bottom=1in}
+
+% Title and Author Info
+\title{\textbf{Real-Time Client-Side Benchmarking of Large Language Models: A Framework for Objective Accuracy and Latency Evaluation}}
+\author{Balaji Segu Krishnaiah(A0005474)}
+\author{Akarsh Nichunnaduttlu Lakshmisha(A00050489)}
+
+\affil{Dublin City University}
+
+\date{} % Omit date if not needed
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+As new Large Language Models (LLMs) are released with varying sizes and architectures, it has become crucial to have a transparent and user-friendly tool to evaluate them. In this paper, we introduce a new web-based benchmarking framework designed to evaluate LLMs across 11 distinct cognitive categories. We utilize contamination-resistant methodologies from the LiveBench framework, and our system employs a dataset from Hugging Face to verify model capabilities against objective ground truth. Additionally, the framework captures detailed performance metrics, including exact token usage from API headers and latency distribution. We present the architecture of this tool and demonstrate how to compare high-parameter models against efficient edge models in a real-time environment.
+\end{abstract}
+
+\section{Introduction}
+Large Language Model evaluation has traditionally relied on standard datasets such as MMLU, GSM8K, etc. These are vulnerable to test set contamination, as newer models are often trained on these standard datasets during pre-training. Organizations naturally aim for their models to perform best on these benchmarks to drive adoption. To address this issue, dynamic benchmarking is required.
+
+To resolve the issue of test set contamination, we have developed a lightweight, user-friendly benchmarking tool using a world on Ancient Brain. This tool can be used by researchers, developers, and students to test, audit, and evaluate LLM APIs in real-time. Traditional benchmarking tools use a fixed dataset of questions and report a single benchmarking score based on that static dataset. In contrast, our framework, built on Ancient Brain, uses dynamic sampling. We employ random questions to benchmark LLMs from a large dataset, providing a detailed view of the model’s performance. This includes cognitive accuracy and operational efficiency via metrics related to token usage and LLM API latencies.
+\section{Related Work}
+
+\subsection{Static vs. Dynamic Benchmarking}
+
+Traditional benchmarks rely on fixed lists of questions. However, recent research shows that modern models, such as GPT-4, often perform suspiciously well on these older tests because they have memorized the answers during training. To solve this, the LiveBench framework \cite{white2025livebench}  introduced contamination free testing. This method uses fresh questions taken from recent news articles, math competitions, and scientific papers published after the model was trained. Our project adopts this dynamic approach but adapts it to run directly in a web browser.
+\subsection{LLM as ajudge vs. Objective Verification}
+Many current leaderboards, such as Chatbot Arena, rely on humans or other AI models to "vote" on which answer is better. While this is easy to do at scale, it introduces bias; for example, AI judges often prefer longer, wordier answers regardless of accuracy. Our framework avoids this by using strict, rule based grading. We implemented specific algorithms such as Levenshtein distance for text and JSON parsing for data to ensure that every score is based on facts rather than opinions.
+
+\subsection{Inference Acceleration}
+Balancing the size of an AI model with its speed is a major challenge. New hardware, such as the Cerebras Wafer Scale Engine, aims to provide instant results by keeping the model's data directly on the chip, avoiding the slow-downs common in standard graphics cards. In this practical , we utilize this technology to test if these hardware claims translate into real-world speed benefits for web applications.
+
+\section{Methodology}
+
+\subsection{System Architecture}
+We have built the benchmarking tool as a Single Page Application (SPA) on the Ancient Brain platform that communicates directly with LLM providers using the Cerebras inference API. This client-side approach ensures that latency metrics reflect the true experience of the end-user, accounting for network overhead and API cold starts.
+
+\subsubsection{Client-Side Execution}
+By running the benchmark logic purely on the client side, we simulate the exact conditions of a real-world web application. The tool communicates directly with LLM providers via the \textbf{Cerebras Inference API}. This approach ensures that the latency metrics capture the full round-trip time (RTT), including DNS resolution, TCP handshakes, and API cold starts, providing a more realistic measure of user experience than server-to-server benchmarks.
+
+\subsubsection{Hardware Backend}
+The inference requests are processed by Cerebras CS-3 systems, which utilize WSE-3 chips. These processors enable high-throughput inference by maintaining 16-bit precision and eliminating memory transfer latencies.
+
+\subsubsection{Model Support \& Unified Interface}
+To facilitate comparative analysis across diverse architectures, our platform offers a unified interface where users can test multiple state-of-the-art models using a \textbf{single API key}. We currently support the following models:
+\begin{itemize}
+    \item \textbf{Llama 3.1 8B:} An efficient, lightweight model suitable for edge use cases.
+    \item \textbf{Llama 3.3 70B:} A high-parameter model optimized for reasoning.
+    \item \textbf{Qwen 3 32B:} A balanced model offering high performance at lower latency.
+    \item \textbf{Qwen 3 235B Instruct:} A massive, sparse model for complex instruction following.
+    \item \textbf{Z.ai GLM 4.6:} A generalized language model for diverse tasks.
+\end{itemize}
+This abstraction allows users to switch between models instantly to compare performance without managing multiple provider SDKs or authentication tokens.
+
+\subsection{Dataset and Randomized Sampling}
+To mitigate the risk of model memorization, we utilize a contamination-resistant dataset comprising approximately 200 questions per category.
+
+\begin{itemize}
+    \item \textbf{Sampling Strategy:} Upon every benchmark execution, the engine utilizes a randomized selection algorithm to isolate 7 unique queries for every category.
+    \item \textbf{Total Evaluation:} Each session evaluates 77 unique queries (11 categories $\times$ 10 samples).
+    \item \textbf{Ground Truth:} We strictly avoid ``LLM-as-a-judge'' methodologies to eliminate evaluator bias. Instead, our framework relies on objective ground truth verification using the deterministic logical routers described below.
+\end{itemize}
+
+\subsection{Cognitive Taxonomy}
+To provide a comprehensive assessment of general intelligence, we evaluate models across 11 distinct tasks grouped into four primary domains. These specific tasks were selected to test capabilities ranging from linguistic precision to high-order logic\cite{white2025livebench}:
+
+\begin{itemize}
+    \item \textbf{Language Processing:} Evaluates semantic understanding and sequencing through three specific tasks\cite{huggingface_language}:
+    \begin{itemize}
+        \item \textit{Typos:} Correction of noisy input text.
+        \item \textit{Connections:} Identification of semantic associations between words.
+        \item \textit{Plot Unscrambling:} Reordering shuffled narrative segments into a logical sequence.
+    \end{itemize}
+
+    \item \textbf{Reasoning:} Tests logical deduction capabilities using \cite{huggingface_reasoning}:
+    \begin{itemize}
+        \item \textit{Web of Lies:} Boolean logic and truthfulness evaluation.
+        \item \textit{Zebra Puzzle:} Complex constraint satisfaction problems.
+        \item \textit{Spatial:} Reasoning about geometric relationships and physical descriptions.
+    \end{itemize}
+
+    \item \textbf{Data Analysis:} Assesses the model's ability to interpret structured data via \cite{huggingface_data}:
+    \begin{itemize}
+        \item \textit{CTA (Column Type Annotation):} Identifying data types and patterns within table columns.
+        \item \textit{Table Format:} Reformatting and transforming tabular data structures.
+    \end{itemize}
+
+    \item \textbf{Instruction Following:} Measures adherence to specific generation constraints \cite{huggingface_instruct}:
+    \begin{itemize}
+        \item \textit{Simplify:} Rewriting complex text into simpler forms.
+        \item \textit{Story Generation:} Creating narratives that adhere to strict creative constraints.
+        \item \textit{Paraphrase:} Rewriting text while preserving meaning under stylistic constraints.
+    \end{itemize}
+\end{itemize}
+
+\section{Empirical Results}
+\textit{Note: This section presents a comparative analysis of two user-selected models, referred to here as Model A and Model B.}
+
+\subsection{Cognitive Accuracy \& Skill Visualization}
+We have evaluated Model A against Model B. The results are averaged over multiple randomized runs and are shown in the radar chart below.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{graph.png} % Uncomment and replace with actual file
+    % \fbox{\parbox{\linewidth}{\centering \vspace{2cm} [Insert Figure 1: Comparison Radar Chart] \vspace{2cm}}}
+    \caption{Radar Chart showing the skill coverage of Model A (Blue) vs. Model B (Green) across the 11 categories.}
+    \label{fig:radar}
+\end{figure}
+
+\textbf{Analysis:} Model A (Qwen 3 32B) showed unexpected superiority in specific tasks such as \textbf{Data Analysis (CTA)}, achieving an accuracy of \textbf{30\%} (vs 20\% for Model B). However, Model B (Llama 3.3 70B) demonstrated significantly broader capabilities, dominating in \textbf{Instruct Following (Story Generation)} with \textbf{70\%} accuracy, suggesting that the larger parameter model is far better suited for creative and context-heavy tasks.
+
+\subsection{Latency Distribution}
+The stability of latency is critical for the user experience. We measured the Average, P95, P97, and P99 response times.
+
+\begin{figure}[ht]
+    \centering
+     \includegraphics[width=\linewidth]{latency.png} % Uncomment and replace with actual file
+    % \fbox{\parbox{\linewidth}{\centering \vspace{2cm} [Insert Figure 2: Latency Bar Charts] \vspace{2cm}}}
+    \caption{Latency distribution metrics (ms) comparing Average and Tail Latencies.}
+    \label{fig:latency}
+\end{figure}
+
+\textbf{Analysis:} Model B (Llama 3.3 70B) achieved an average latency of \textbf{440} ms, which is slightly faster than Model A (Qwen 3 32B) at \textbf{450} ms. However, the P99 (worst case) latency reveals a trade-off: Model B spiked to \textbf{1490} ms, whereas Model A remained lower at \textbf{1175} ms, indicating that Model A maintains better stability under extreme tail-end load.
+
+\subsection{Token Consumption Efficiency}
+We used the API response headers to track the exact token volumes generated for each answer.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{token.png} % Uncomment and replace with actual file
+    % \fbox{\parbox{\linewidth}{\centering \vspace{2cm} [Insert Figure 3: Token Usage Bar Graph] \vspace{2cm}}}
+    \caption{Total token consumption across all 11 categories.}
+    \label{fig:tokens}
+\end{figure}
+
+\textbf{Analysis:} Token consumption varied significantly by cognitive domain rather than being uniform. Model A (Qwen 3 32B) was more concise in logical tasks, utilizing approximately \textbf{1,400} fewer tokens than Model B for the \textit{Zebra Puzzle}. Conversely, Model B (Llama 3.3 70B) proved more efficient in linguistic tasks, requiring \textbf{700} fewer tokens for \textit{Paraphrasing}. Overall, the aggregate consumption was comparable, with Model A using approximately \textbf{49,500} tokens versus Model B's \textbf{49,900} tokens across the full benchmark.
+
+\section{Discussion}
+The results highlight the trade-offs available to developers. Users who require maximum fidelity in categories like Complex Reasoning might prefer Model A despite its higher latency. On the other hand, for real-time applications involving Context Comprehension or Chat, Model B offers a superior speed profile with acceptable accuracy.
+
+Our framework’s ``Skill Graph'' allows users to visually identify these trade-offs instantly, moving beyond simple leaderboards to granular, verifiable auditing.
+
+\section{Conclusion}
+We have presented a robust, browser-based framework for benchmarking LLMs using a world on Ancient Brain. By combining diverse cognitive categories with a randomized sampling methodology, our tool provides a contamination-resistant assessment of AI capabilities. This approach validates that client-side sampling is a viable method for conducting statistically significant AI audits on any user-selected model.
+
+\begin{thebibliography}{9}
+
+% Updated LiveBench Reference
+\bibitem{white2025livebench}
+White, C., Dooley, S., Roberts, M., et al. (2025).
+LiveBench: A Challenging, Contamination-Limited LLM Benchmark.
+\textit{The Thirteenth International Conference on Learning Representations}.
+Available at: \url{https://openreview.net/forum?id=sKYHBTAxVa}
+
+\bibitem{huggingface_reasoning}
+LiveBench Reasoning Dataset. Hugging Face. 
+Available at: \url{https://huggingface.co/datasets/livebench/reasoning}
+
+\bibitem{huggingface_coding}
+LiveBench Coding Dataset. Hugging Face. 
+Available at: \url{https://huggingface.co/datasets/livebench/coding}
+
+\bibitem{huggingface_language}
+LiveBench Language Dataset. Hugging Face. 
+Available at: \url{https://huggingface.co/datasets/livebench/language}
+
+\bibitem{huggingface_data}
+LiveBench Data Analysis Dataset. Hugging Face. 
+Available at: \url{https://huggingface.co/datasets/livebench/data_analysis}
+
+\bibitem{huggingface_instruct}
+LiveBench Instruction Following Dataset. Hugging Face. 
+Available at: \url{https://huggingface.co/datasets/livebench/instruction_following}
+
+\bibitem{cerebras}
+Cerebras Inference API Documentation.
+\url{https://inference-docs.cerebras.ai/quickstart}
+
+\bibitem{ancientbrain}
+Ancient Brain Platform Documentation.
+\url{https://ancientbrain.com/docs.php}
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,347 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage{adjustbox}
+% --- COMPACT DESIGN PACKAGES ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}       % Palatino Font
+\usepackage[scaled=0.95]{helvet}
+\usepackage{geometry}
+\geometry{a4paper, margin=0.8in} % <--- REDUCED MARGINS (Was 1in)
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{enumitem}       % <--- NEW: For tightening lists
+\usepackage{xurl} % <--- ADDS INTELLIGENT LINE BREAKING FOR URLS
+% --- TIGHTENING SPACING (The Fix) ---
+% 1. Reduce space around Sections
+\titlespacing*{\section}{0pt}{12pt}{6pt}      % {Left}{Before}{After}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
+
+% 2. Remove space between bullet points
+\setlist{nosep} 
+
+% 3. Reduce space around Title
+% \setlength{\droptitle}{-5em} % Requires titling package, but we can hack it below
+
+% 4. Reduce space around Figures
+\setlength{\textfloatsep}{10pt plus 1.0pt minus 2.0pt}
+
+% --- STYLING ---
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}[{\titlerule[0.8pt]}]
+
+\hypersetup{colorlinks=true, linkcolor=black, urlcolor=blue, citecolor=blue}
+
+% --- TITLE INFO ---
+\title{\vspace{-2cm} \textbf{\LARGE The Visual Shopper Report} \\ \large Predicting Computer Prices Based on Brand and User-Facing Features}
+\author{
+    GROUP 17
+}
+\date{\vspace{-0.5cm}\today} % Pulls date up
+
+\begin{document}
+
+\maketitle
+
+% --- ABSTRACT ---
+% \begin{abstract}
+    \noindent \textbf{Executive Summary:} This project bypasses traditional technical metrics to test the ``Visual Shopper Hypothesis''—that market price is driven by \textasciitilde10 user-facing features. Using 94,200 data points, we engineered ``GPU Tiers'' and ``Screen PPI'' to predict laptop prices with \textbf{\$173.18 MAE} accuracy using XGBoost. Our findings confirm that \textbf{Brand Reputation} \cite{acsi2025} and \textbf{Form Factor} are the primary drivers of cost in the consumer market, outperforming raw technical specs.
+% \end{abstract}
+
+\vspace{0.5cm}
+
+% % --- SECTION 1: ROLES ---
+% \section{Team Contributions}
+
+% \begin{table}[H]
+% \centering
+% \scriptsize
+% \setlength{\tabcolsep}{4pt}
+% \renewcommand{\arraystretch}{1.05}
+
+\begin{table}[H]
+    \centering
+    \scriptsize % Keep text small to fit
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.2} % Adds breathing room between rows
+
+    % COLUMNS: 
+    % 1. Name (Wraps if too long)
+    % 2. ID (Left align)
+    % 3. Role (Wraps at 4.5cm width)
+    % 4. Responsibilities (Fills rest of page)
+    \begin{tabularx}{\textwidth}{@{} p{2.5cm} l p{4.5cm} X @{}}
+        \toprule
+        \textbf{Name} & \textbf{Student ID} & \textbf{Role} & \textbf{Key Responsibilities} \\
+        \midrule
+
+        Balaji Segu Krishnaiah 
+        & A00050474 
+        & Model Design, Validation Techniques, and Research 
+        & Built and trained models, performed validation tuning, and generated metrics. \\
+        \midrule
+
+        Shalini Madanu 
+        & A00052000 
+        & Data preparation, visual insights, and documentation 
+        &  Data preprocessing, produced EDA graphics, and prepared the final write-up. \\
+        \midrule
+
+        Parth Vijay Mhatre 
+        & A00016945 
+        & Model development and error analysis 
+        & Helped build models, reviewed performance errors, and compiled citations. \\
+        \midrule
+
+        Rakhi Mahatme 
+        & A00051659 
+        &  Data preparation,Ethical and legal evaluation 
+        & Data preprocessing and Cleaning,wrote the ethics/legal section and assisted with analysis. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Team Contributions}
+\end{table}
+
+% \end{table}
+
+
+% --- SECTION 2: PROBLEM ---
+\section{Problem \& Data Strategy}
+\textbf{Objective:} Predict retail price (\$) using non-technical consumer features.
+\subsection{Dataset Description}
+\begin{itemize}
+    \item \textbf{Source:} \textbf{All Computer Prices} dataset from Kaggle \cite{kaggle2024}.
+    \item \textbf{Volume:} Originally $\sim$100,000 rows $\times$ 21 columns (Reduced to 94,200 rows after cleaning).
+    \item \textbf{Initial Features:} \texttt{brand}, \texttt{model}, \texttt{cpu\_brand}, \texttt{cpu\_model}, \texttt{cpu\_speed}, \texttt{gpu\_brand}, \texttt{gpu\_model}, \texttt{ram\_gb}, \texttt{storage\_type}, \texttt{ssd}, \texttt{hdd}, \texttt{os}, \texttt{os\_version}, \texttt{display\_size\_in}, \texttt{resolution}, \texttt{weight\_kg}, \texttt{warranty}, \texttt{touchscreen}, \texttt{msoffice}, and \texttt{price} (target variable).
+\end{itemize}
+\subsection{Data Cleaning (The Purge)}
+To ensure model stability, we removed \textbf{5\% of the dataset} consisting of "Dirty Data":
+\begin{itemize}
+    \item \textbf{Impossible Configurations:} Rows with $>64$GB RAM priced under \$2,000.
+    \item \textbf{Broken Units:} Laptops with Dedicated GPUs priced under \$400.
+    % --- IMAGE 1: GPU/RAM PLOT ---
+\begin{figure}[H]
+    \centering
+    % TODO: Upload 'image_ff1063.jpg' to Overleaf
+     \includegraphics[width=0.6\textwidth]{heat_map.png}
+    
+    
+    \caption{\textbf{Visual validation of primary features.} (Left) Boxplot showing clear price separation between GPU Tiers. (Right) Regression plot showing the strong linear correlation ($r=0.67$) between RAM and Price.\cite{waskom2021seaborn}}
+    \label{fig:gpu_ram_val}
+\end{figure}
+\end{itemize}
+
+% --- SECTION 3: METHODS ---
+\section{Methodology}
+
+\subsection{Feature Engineering}
+We engineered two novel features to capture value usually missed by raw specs:
+\begin{enumerate}
+    \item \textbf{GPU Tiers (Ordinal Encoding):} Mapped raw text names to value tiers (0=Integrated, 3=High-End).
+    \item \textbf{Brand Reputation Score:} Integrated ACSI Customer Satisfaction data.
+\end{enumerate}
+
+\subsection{Model Selection}
+We evaluated three distinct algorithms to capture different pricing dynamics:
+\begin{itemize}
+\item \textbf{Ridge Regression (Baseline):} Selected to handle multicollinearity (e.g., Apple vs. macOS) and quantify linear price drivers.
+\item \textbf{Random Forest:} Utilized to capture non-linear "step functions" in pricing (e.g., the discrete value jump between 8GB and 16GB RAM).
+\item \textbf{XGBoost (Champion):} Chosen for its sequential error-correction capabilities, which successfully identified and corrected under-priced "sleeper" gaming laptops, achieving the lowest error ($MAE \approx \$173$).
+\end{itemize}
+
+% --- NEW SECTION 3.3: STATISTICAL VALIDATION ---
+\subsection{Statistical Feature Validation}
+Before training, we performed hypothesis testing to confirm that our features had a statistically significant relationship with the target variable (\texttt{log\_price}).
+
+\vspace{0.3cm}
+\textbf{1. Validation of green stickers (ANOVA Test)} \\
+To validate our engineered \texttt{gpu\_tier} feature, we performed a One-Way ANOVA test.
+\begin{itemize}
+    \item \textbf{Hypothesis ($H_0$):} Price is identical across all GPU tiers.
+    \item \textbf{Result:} The test yielded a massive F-Statistic of \textbf{1213.05} with a p-value approaching zero ($p < 0.001$).
+    \item \textbf{Conclusion:} We effectively rejected the null hypothesis, proving that the 4 distinct GPU tiers represent statistically distinct price brackets.
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{2. The Memory Validation (Pearson Correlation)} \\
+We tested the linear relationship between RAM and Price.
+\begin{itemize}
+    \item \textbf{Result:} The Pearson Correlation coefficient was \textbf{0.675}, indicating a strong positive correlation.
+    \item \textbf{Conclusion:} RAM is a robust linear predictor of price.
+\end{itemize}
+
+% --- IMAGE 1: GPU/RAM PLOT ---
+\begin{figure}[H]
+    \centering
+    % TODO: Upload 'image_ff1063.jpg' to Overleaf
+     \includegraphics[width=0.7\textwidth]{gpu_hy.png}
+    
+    % Placeholder
+    % \fbox{\begin{minipage}{0.9\textwidth}\centering \vspace{3cm} \textbf{INSERT: image\_ff1063.jpg (GPU/RAM Plot)} \vspace{3cm} \end{minipage}}
+    
+    \caption{\textbf{Visual validation of primary features.} (Left) Boxplot showing clear price separation between GPU Tiers. (Right) Regression plot showing the strong linear correlation ($r=0.67$) between RAM and Price.}
+    \label{fig:gpu_ram_val}
+\end{figure}
+
+\vspace{0.3cm}
+\textbf{3. The Apple Tax Validation (T-Test)} \\
+We performed an Independent Samples T-Test to compare Apple devices against the rest of the market.
+\begin{itemize}
+    \item \textbf{Result:} The T-Statistic was \textbf{58.28} ($p < 0.001$).
+    \item \textbf{Conclusion:} The extremely high T-statistic confirms that Apple devices belong to a completely different pricing distribution than non-Apple devices, validating the ``Ecosystem Premium'' hypothesis.
+\end{itemize}
+
+% --- IMAGE 2: APPLE BOXPLOT ---
+\begin{figure}[H]
+    \centering
+    % TODO: Upload 'image_ff0d93.png' to Overleaf
+    \includegraphics[height=5cm, width=0.5\textwidth, keepaspectratio]{apple_box__plot.png}
+    
+    % Placeholder
+    % \fbox{\begin{minipage}{0.9\textwidth}\centering \vspace{3cm} \textbf{INSERT: image\_ff0d93.png (Apple Boxplot)} \vspace{3cm} \end{minipage}}
+    
+    \caption{\textbf{Price Distribution Comparison.} The boxplot visually confirms the statistical T-Test result ($t=58.28$), showing that Apple devices (Gray) have a significantly higher median price and tighter distribution than the general market.}
+    \label{fig:apple_boxplot}
+\end{figure}
+
+% --- SECTION 4: RESULTS ---
+\section{Results \& Performance}
+The XGBoost model significantly outperformed the linear baselines.
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{@{}X c c c@{}}
+ \toprule
+ \textbf{Model Strategy} & \textbf{MAE (\$)} & \textbf{RMSE (\$)} & \textbf{R-Squared ($R^2$)} \\ \midrule
+ Ridge Regression & \$214.43 & \$272.59 & 0.624 \\
+ Random Forest & \$181.17 & \$228.61 & 0.735 \\
+ \textbf{XGBoost (Optimized)} & \textbf{\$173.18} & \textbf{\$218.22} & \textbf{0.759} \\ \bottomrule
+ \end{tabularx}
+ 
+\caption{Model Strategy Performance Comparison}
+\end{table}
+
+\subsection{Key Findings from Feature Importance}
+\begin{enumerate}
+    \item \textbf{The RAM Cliff:} RAM (Purple bar) is the single strongest predictor. It acts as a proxy for the entire system's "Tier."
+    \item \textbf{The Brand Tax:} Features like \texttt{brand\_Apple} appear in the Top 5, confirming that Apple devices command a premium independent of raw specs.
+    \item \textbf{Validation of Cleaning:} The engineered \texttt{gpu\_tier} became a significant predictor only after removing the "dirty" low-price GPU errors.
+\end{enumerate}
+
+% --- FEATURE IMPORTANCE IMAGE ---
+\begin{figure}[H]
+    \centering
+    % TODO: Upload 'feature_imp.png'
+     \includegraphics[width=0.5\textwidth]{feature.png}
+    
+    % Placeholder
+    % \fbox{\begin{minipage}{0.95\textwidth}\centering \vspace{3cm} \textbf{INSERT: feature\_imp.png} \vspace{3cm} \end{minipage}}
+    
+    \caption{\textbf{Final Feature Importance.} This plot confirms that while RAM is the primary driver, Brand Reputation and Screen Quality (PPI) are critical secondary factors.}
+    \label{fig:imp}
+\end{figure}
+\subsection{Cross-Validation Results}
+To ensure the model's stability and prevent overfitting, we performed a 5-fold cross-validation on the training data ($N=71,553$). The model demonstrated consistent performance across all folds with minimal variance, confirming its robustness.
+
+\begin{table}[h]
+    \centering
+    \small % Keeps the table compact
+    \begin{tabular}{c c c c}
+        \toprule
+        \textbf{Fold} & \textbf{RMSE} & \textbf{$R^2$ Score} & \textbf{Optimal Trees} \\
+        \midrule
+        1 & 0.1305 & 0.7497 & 226 \\
+        2 & 0.1310 & 0.7508 & 223 \\
+        3 & 0.1328 & 0.7450 & 229 \\
+        4 & 0.1320 & 0.7504 & 260 \\
+        5 & 0.1304 & 0.7474 & 216 \\
+        \midrule
+        \textbf{Average} & \textbf{0.1313 ($\pm$ 0.0009)} & \textbf{0.7486 ($\pm$ 0.0022)} & \textbf{231} \\
+        \bottomrule
+    \end{tabular}
+    \caption{5-Fold Cross-Validation Performance (XGBoost)}
+    \label{tab:cv_results}
+\end{table}
+
+\textbf{Analysis:} The mean RMSE of 0.1313 with a standard deviation of only 0.0009 indicates that the models error is highly predictable and does not fluctuate significantly between different data samples. The consistent $R^2$ score ($\sim$0.75) shows that the model reliably explains approximately 75\% of the variance in price, regardless of the specific training subset used.
+% --- NEW SUBSECTION: ERROR ANALYSIS ---
+\subsection{Error Analysis}
+To evaluate the reliability of our final XGBoost\cite{xgboost2025} model ($MAE = \$173.18$), we conducted a visual error analysis using a dual-plot dashboard (Figure \ref{fig:error_analysis}).
+
+\vspace{0.3cm}
+\textbf{1. Prediction Alignment (Left Plot)}
+\begin{itemize}
+    \item \textbf{Observation:} The scatter plot of Predicted vs. Actual prices shows a tight clustering around the red identity line ($y=x$) for the majority of the data, particularly in the \$500 -- \$2,000 range.
+    \item \textbf{Metric:} The model achieves an $R^2$ of 0.759, indicating that it successfully explains nearly 76\% of the price variance using only our 10 engineered features.
+    \item \textbf{Deviation:} We observe slight heteroscedasticity (fanning out) at the upper end ($>\$3,000$). This is expected, as high-end workstations vary wildly in price due to features our model cannot see (e.g., specialized CAD certifications or specific OLED panels).
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{2. Residual Distribution (Right Plot)}
+\begin{itemize}
+    \item \textbf{Observation:} The residuals (Actual - Predicted) are normally distributed and centered around zero.
+    \item \textbf{Bias Check:} There is no significant U shape or systematic curvature in the residuals, which confirms that our XGBoost model has captured the non-linear pricing logic (e.g., the RAM tiers) correctly.
+    \item \textbf{The Sleeper Outliers:} The few outliers (dots far below the zero line) represent Sleeper devices computers with high specifications but low brand recognition. The model slightly over-predicts their price because it expects High Specs to always equal High Price, missing the discount provided by lesser-known brands.
+\end{itemize}
+
+% --- IMAGE 4: ERROR DASHBOARD ---
+\begin{figure}[H]
+    \centering
+    % TODO: Upload 'image_fefa98.jpg' to Overleaf
+     \includegraphics[width=0.6\textwidth]{error_analysis.png}
+    
+    % Placeholder
+    % \fbox{\begin{minipage}{0.95\textwidth}\centering \vspace{4cm} \textbf{INSERT: image\_fefa98.jpg (Error Dashboard)} \vspace{4cm} \end{minipage}}
+    
+    \caption{\textbf{Error Analysis Dashboard.} (Left) Predicted vs. Actual prices showing strong alignment along the diagonal. (Right) Residuals plot confirming unbiased error distribution centered at zero.}
+    \label{fig:error_analysis}
+\end{figure}
+\section{Conclusion}This project successfully demonstrates that expensive hardware features are not necessary for accurate price prediction. By focusing on \textbf{Visible Features} (Screen, Brand, Form Factor) and removing Dirty Data, we achieved nearly 80\% variance explanation, validating the "Visual Shopper Hypothesis." Our results confirm that complex pricing dynamics can be effectively modeled using high-level proxy variables like GPU Tiers and Brand Reputation, without needing granular engineering data.\subsection{Limitations}Despite the model's success ($MAE \approx \$173$), our analysis was restricted to the mainstream consumer market. We explicitly excluded enterprise-grade workstations (prices $> \$4,500$) as pricing these niche devices requires specialized technical data unavailable in our "Visual" feature set. Additionally, the model cannot currently account for premium materials (e.g., carbon fiber vs. plastic) mentioned only in unstructured text descriptions.\subsection{Future Work}Future iterations of this project could integrate Natural Language Processing (NLP) to extract high value keywords (e.g., "OLED", "Touchscreen", "144Hz") from product titles. Furthermore, incorporating a temporal feature such as "Days Since Release" could help the model account for the natural depreciation of electronics over time.
+\subsection{Project Repository}
+
+
+\vspace{0.3cm}
+
+\noindent \textbf{Code Link:} \\
+\href{https://gitlab.computing.dcu.ie/parthvijay.mhatre2/predicting-computer-prices-via-visual-user-experience-features}{[Click Here to Open GitLab Repository]}
+ % \newpage
+% --- BIBLIOGRAPHY (Single File Format) ---
+\begin{thebibliography}{9}
+
+    % 1. Primary Dataset
+    \bibitem{kaggle2024}
+    Paperxd. (2024). \textit{All Computer Prices Dataset}. Kaggle Data Repository. Retrieved from \url{https://www.kaggle.com/datasets/paperxd/all-computer-prices}
+
+    % 2. Brand Reputation
+    \bibitem{acsi2025}
+    American Customer Satisfaction Index (ACSI). (2025). \textit{ACSI Household Appliance and Electronics Study 2024-2025}. Retrieved from \url{https://theacsi.org/industries/manufacturing/personal-computers/}
+
+    % 3. Feature Engineering Book
+    \bibitem{galli2024}
+    Galli, S. (2024). \textit{Python Feature Engineering Cookbook} (3rd ed.). Packt Publishing.
+    \url{https://github.com/PacktPublishing/Python-Feature-Engineering-Cookbook-Third-Edition}
+
+    % 4. XGBoost (Original Paper)
+    \bibitem{chen2016xgboost}
+    Chen, T., \& Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 785–794. \url{https://arxiv.org/abs/1603.02754}
+
+    % 5. XGBoost (Documentation)
+    \bibitem{xgboost2025}
+    XGBoost Developers. (2025). \textit{XGBoost Python Package Documentation (Version 2.1)}. Retrieved from \url{https://xgboost.readthedocs.io/}
+
+    % 6. Scikit-Learn
+    \bibitem{sklearn2025}
+    Scikit-learn Developers. (2025). \textit{Scikit-learn: Machine Learning in Python (Version 1.6)}. Retrieved from \url{https://scikit-learn.org/stable/}
+
+    % 7. Seaborn
+    \bibitem{waskom2021seaborn}
+    Waskom, M. L. (2021). seaborn: statistical data visualization. \textit{Journal of Open Source Software}, 6(60), 3021.
+
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Balaji Segu Krishnaiah — Neural Portfolio</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg: #050a14;
+    --node-glow: #00d4ff;
+    --node-active: #7c3aed;
+    --node-achieve: #f59e0b;
+    --node-like: #10b981;
+    --node-output: #ec4899;
+    --line: rgba(0,212,255,0.15);
+    --line-active: rgba(0,212,255,0.7);
+    --panel-bg: rgba(10,20,40,0.97);
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── PARTICLE CANVAS ── */
+  #canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  /* ── HERO OVERLAY ── */
+  #hero {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  #hero.hidden { opacity:0; pointer-events:none; }
+
+  .hero-badge {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--node-glow);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0;
+    animation: fadeUp 1s 0.5s forwards;
+  }
+  .hero-name {
+    font-size: clamp(36px, 5vw, 72px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, #00d4ff 50%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    opacity: 0;
+    animation: fadeUp 1s 0.8s forwards;
+    line-height: 1.1;
+  }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--muted);
+    margin-top: 12px;
+    opacity: 0;
+    animation: fadeUp 1s 1.1s forwards;
+  }
+  .hero-cta {
+    margin-top: 40px;
+    padding: 14px 36px;
+    background: linear-gradient(135deg, #00d4ff, #7c3aed);
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    pointer-events: all;
+    opacity: 0;
+    animation: fadeUp 1s 1.4s forwards;
+    box-shadow: 0 0 30px rgba(0,212,255,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: 1px;
+  }
+  .hero-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 50px rgba(0,212,255,0.6);
+  }
+  .hero-hint {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--muted);
+    opacity: 0;
+    animation: fadeUp 1s 2s forwards;
+    pointer-events: all;
+  }
+
+  /* ── NETWORK STAGE ── */
+  #network {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
+  }
+  #network.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── SVG LINES ── */
+  #svg-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  /* ── LAYER LABELS ── */
+  .layer-label {
+    position: absolute;
+    top: 22px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    transform: translateX(-50%);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* ── NODES ── */
+  .node {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--node-glow);
+    background: rgba(0,212,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+    z-index: 3;
+    box-shadow: 0 0 12px rgba(0,212,255,0.2);
+  }
+  .node:hover, .node.active {
+    background: rgba(0,212,255,0.2);
+    box-shadow: 0 0 30px rgba(0,212,255,0.6), 0 0 60px rgba(0,212,255,0.2);
+    border-color: #fff;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  .node.type-input {
+    width: 70px; height: 70px;
+    border-color: var(--node-glow);
+    background: rgba(0,212,255,0.15);
+    box-shadow: 0 0 25px rgba(0,212,255,0.4);
+  }
+  .node.type-achieve {
+    border-color: var(--node-achieve);
+    background: rgba(245,158,11,0.08);
+    box-shadow: 0 0 12px rgba(245,158,11,0.3);
+  }
+  .node.type-achieve:hover, .node.type-achieve.active {
+    box-shadow: 0 0 30px rgba(245,158,11,0.7);
+    border-color: var(--node-achieve);
+    background: rgba(245,158,11,0.2);
+  }
+  .node.type-like {
+    border-color: var(--node-like);
+    background: rgba(16,185,129,0.08);
+    box-shadow: 0 0 12px rgba(16,185,129,0.3);
+  }
+  .node.type-like:hover, .node.type-like.active {
+    box-shadow: 0 0 30px rgba(16,185,129,0.7);
+  }
+  .node.type-output {
+    width: 72px; height: 72px;
+    border-color: var(--node-output);
+    background: rgba(236,72,153,0.15);
+    box-shadow: 0 0 25px rgba(236,72,153,0.5);
+    animation: pulseOutput 2s infinite;
+  }
+  @keyframes pulseOutput {
+    0%,100% { box-shadow: 0 0 25px rgba(236,72,153,0.5); }
+    50% { box-shadow: 0 0 50px rgba(236,72,153,0.9), 0 0 80px rgba(236,72,153,0.3); }
+  }
+
+  .node-icon { font-size: 20px; pointer-events: none; }
+  .node-label {
+    position: absolute;
+    bottom: -22px;
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* ── PULSE RING ── */
+  .node::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    opacity: 0;
+    animation: ring 3s infinite;
+  }
+  .node.active::before { animation: ring 1.5s infinite; opacity: 1; }
+  @keyframes ring {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+
+  /* ── SIDE PANEL ── */
+  #panel {
+    position: fixed;
+    right: -440px;
+    top: 0;
+    width: 420px;
+    height: 100vh;
+    background: var(--panel-bg);
+    border-left: 1px solid rgba(0,212,255,0.15);
+    z-index: 10;
+    transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
+    overflow-y: auto;
+    backdrop-filter: blur(20px);
+    padding: 32px 28px;
+  }
+  #panel.open { right: 0; }
+
+  .panel-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .panel-close:hover { background: rgba(255,255,255,0.12); }
+
+  .panel-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .panel-title {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+  .panel-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .panel-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .panel-item:hover { border-color: rgba(0,212,255,0.3); }
+
+  .item-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .item-sub {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin: 3px 2px;
+  }
+  .badge-blue { background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+  .badge-green { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+  .badge-pink { background: rgba(236,72,153,0.15); color: #ec4899; border: 1px solid rgba(236,72,153,0.3); }
+  .badge-purple { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+
+  .stat-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-num { font-size: 24px; font-weight: 800; }
+  .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .connect-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #ec4899, #7c3aed);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 16px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 30px rgba(236,72,153,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .connect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 50px rgba(236,72,153,0.5);
+  }
+
+  /* ── BACK BTN ── */
+  #back-btn {
+    position: fixed;
+    top: 20px; left: 20px;
+    z-index: 20;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    padding: 8px 18px;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+  }
+  #back-btn.visible { display: flex; }
+  #back-btn:hover { background: rgba(255,255,255,0.1); }
+
+  /* ── MINI LEGEND ── */
+  #legend {
+    position: fixed;
+    bottom: 24px; left: 24px;
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #legend.visible { display: flex; }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; color: var(--muted); letter-spacing: 1px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── SCROLLABLE NODE PULSE ── */
+  @keyframes nodePulse {
+    0%,100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  /* ── TOOLTIP ── */
+  .tooltip {
+    position: fixed;
+    background: rgba(10,20,40,0.95);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--node-glow);
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .tooltip.show { opacity: 1; }
+
+  /* ── LAYER CONNECTOR LABEL ── */
+  .flow-arrow {
+    position: absolute;
+    top: 50%;
+    font-size: 20px;
+    color: rgba(0,212,255,0.2);
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div id="hero">
+  <div class="hero-badge">⬡ Neural Portfolio v1.0 — Initializing</div>
+  <div class="hero-name">Balaji Segu Krishnaiah</div>
+  <div class="hero-sub">Full Stack Builder &nbsp;·&nbsp; Competitive Programmer &nbsp;·&nbsp; Builder</div>
+  <button class="hero-cta" onclick="activateNetwork()">⚡ Run Inference on Me</button>
+  <div class="hero-hint">↓ Each node is a layer of who I am — click to explore</div>
+</div>
+
+<!-- NETWORK -->
+<div id="network">
+  <svg id="svg-lines" xmlns="http://www.w3.org/2000/svg"></svg>
+  <!-- Nodes injected by JS -->
+</div>
+
+<!-- BACK -->
+<button id="back-btn" onclick="goBack()">← Back</button>
+
+<!-- LEGEND -->
+<div id="legend">
+  <div class="legend-item"><div class="legend-dot" style="color:#00d4ff"></div>Core Layer</div>
+  <div class="legend-item"><div class="legend-dot" style="color:#f59e0b"></div>Achievements</div>
+  <div class="legend-item"><div class="legend-dot" style="color:#10b981"></div>Interests</div>
+  <div class="legend-item"><div class="legend-dot" style="color:#ec4899"></div>Output</div>
+</div>
+
+<!-- PANEL -->
+<div id="panel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div id="panel-content"></div>
+</div>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const LAYERS = [
+  {
+    id: 'input', label: 'INPUT', x: 8,
+    nodes: [
+      { id: 'me', icon: '⬡', label: 'YOU', type: 'input',
+        title: 'Who is Balaji?',
+        tag: 'ABOUT ME', tagColor: '#00d4ff',
+        desc: 'Full Stack Builder obsessed with crafting products that live at the intersection of great engineering and great experience.',
+        content: `
+          <div class="stat-row">
+            <div class="stat-box"><div class="stat-num" style="color:#00d4ff">3+</div><div class="stat-lbl">Years Exp</div></div>
+            <div class="stat-box"><div class="stat-num" style="color:#a78bfa">10+</div><div class="stat-lbl">Projects</div></div>
+            <div class="stat-box"><div class="stat-num" style="color:#10b981">5+</div><div class="stat-lbl">Hackathons</div></div>
+          </div>
+          <div class="panel-item"><div class="item-title">🧠 Philosophy</div><div class="item-sub">I don't just write code. I engineer experiences — fast, scalable, and built to last.</div></div>
+          <div class="panel-item"><div class="item-title">📍 Based in India</div><div class="item-sub">Open to remote, hybrid, or relocation for the right opportunity.</div></div>
+          <div class="panel-item"><div class="item-title">🎯 Currently Looking For</div><div class="item-sub">Full-time SWE roles &nbsp;·&nbsp; Freelance projects &nbsp;·&nbsp; Open-source collaboration</div></div>
+        `
+      }
+    ]
+  },
+  {
+    id: 'social', label: 'SOCIAL', x: 20,
+    nodes: [
+      { id: 'github', icon: '⌥', label: 'GitHub', type: 'default', title: 'GitHub', tag: 'CODE', tagColor: '#00d4ff',
+        desc: 'Where my code lives. 500+ commits. Active contributor.',
+        content: `
+          <div class="panel-item"><div class="item-title">github.com/balaji-sk</div><div class="item-sub">500+ commits &nbsp;·&nbsp; 10+ repos &nbsp;·&nbsp; Active contributor</div></div>
+          <div class="panel-item"><div class="item-title">Top Languages</div><div class="item-sub">
+            <span class="badge badge-blue">JavaScript</span><span class="badge badge-purple">Python</span><span class="badge badge-green">TypeScript</span><span class="badge badge-blue">Go</span>
+          </div></div>
+        `
+      },
+      { id: 'linkedin', icon: '◈', label: 'LinkedIn', type: 'default', title: 'LinkedIn', tag: 'CONNECT', tagColor: '#00d4ff',
+        desc: 'Professional network. 500+ connections.',
+        content: `<div class="panel-item"><div class="item-title">linkedin.com/in/balaji-sk</div><div class="item-sub">500+ connections &nbsp;·&nbsp; Actively posting about tech, DSA & building in public.</div></div>`
+      },
+      { id: 'twitter', icon: '◇', label: 'Twitter/X', type: 'default', title: 'Twitter / X', tag: 'THOUGHTS', tagColor: '#00d4ff',
+        desc: 'Building in public. Sharing learnings.',
+        content: `<div class="panel-item"><div class="item-title">@balaji_sk</div><div class="item-sub">Sharing DSA tips, project updates, and tech opinions.</div></div>`
+      }
+    ]
+  },
+  {
+    id: 'achieve', label: 'ACHIEVEMENTS', x: 34,
+    nodes: [
+      { id: 'rank1', icon: '🥇', label: 'Rank #1', type: 'achieve', title: '🥇 Academic Excellence', tag: 'ACHIEVEMENT', tagColor: '#f59e0b',
+        desc: 'Consistent top performer throughout school and college.',
+        content: `
+          <div class="panel-item"><div class="item-title">🏆 Ranked #1 in School</div><div class="item-sub">Topped class consistently. Scored 95%+ in boards. Mathematics & Computer Science distinction.</div></div>
+          <div class="panel-item"><div class="item-title">🎓 College Top 5%</div><div class="item-sub">Dean's list. Highest GPA in Computer Science cohort multiple semesters.</div></div>
+          <div class="panel-item"><div class="item-title">📚 Certifications</div><div class="item-sub"><span class="badge badge-yellow">AWS Cloud</span><span class="badge badge-yellow">React Advanced</span><span class="badge badge-yellow">System Design</span></div></div>
+        `
+      },
+      { id: 'hackwin', icon: '⚡', label: 'Hackathons', type: 'achieve', title: '⚡ Hackathon Champion', tag: 'ACHIEVEMENT', tagColor: '#f59e0b',
+        desc: 'Won multiple hackathons. Built under pressure, shipped fast.',
+        content: `
+          <div class="stat-row">
+            <div class="stat-box"><div class="stat-num" style="color:#f59e0b">5+</div><div class="stat-lbl">Hacks Won</div></div>
+            <div class="stat-box"><div class="stat-num" style="color:#f59e0b">48h</div><div class="stat-lbl">Max Sprint</div></div>
+          </div>
+          <div class="panel-item"><div class="item-title">🥇 National Hackathon 2024</div><div class="item-sub">1st place · Built an AI-powered supply chain optimizer · 200+ teams</div></div>
+          <div class="panel-item"><div class="item-title">🥈 Smart India Hackathon</div><div class="item-sub">Runner-up · Blockchain-based land registry system · National level</div></div>
+          <div class="panel-item"><div class="item-title">🏆 College Internal Hack</div><div class="item-sub">1st · Real-time traffic management with ML · 50 teams</div></div>
+          <div class="panel-item"><div class="item-title">Skills Under Pressure</div><div class="item-sub"><span class="badge badge-yellow">Speed</span><span class="badge badge-yellow">Teamwork</span><span class="badge badge-yellow">MVP Thinking</span><span class="badge badge-yellow">Pitching</span></div></div>
+        `
+      },
+      { id: 'leet', icon: '⬟', label: 'LeetCode', type: 'achieve', title: '⬟ LeetCode 547', tag: 'DSA', tagColor: '#f59e0b',
+        desc: '547 problems solved. Top competitive programmer.',
+        content: `
+          <div class="stat-row">
+            <div class="stat-box"><div class="stat-num" style="color:#10b981">547</div><div class="stat-lbl">Solved</div></div>
+            <div class="stat-box"><div class="stat-num" style="color:#f59e0b">Top 8%</div><div class="stat-lbl">Global Rank</div></div>
+          </div>
+          <div class="panel-item"><div class="item-title">Difficulty Breakdown</div><div class="item-sub">
+            <span class="badge badge-green">Easy 180</span><span class="badge badge-yellow">Medium 290</span><span class="badge badge-pink">Hard 77</span>
+          </div></div>
+          <div class="panel-item"><div class="item-title">Strong Topics</div><div class="item-sub"><span class="badge badge-blue">Graphs</span><span class="badge badge-blue">DP</span><span class="badge badge-blue">Trees</span><span class="badge badge-blue">Sliding Window</span></div></div>
+        `
+      }
+    ]
+  },
+  {
+    id: 'experience', label: 'EXPERIENCE', x: 48,
+    nodes: [
+      { id: 'exp1', icon: '◉', label: 'Job 1', type: 'default', title: '💼 Experience', tag: 'WORK', tagColor: '#00d4ff',
+        desc: 'Real-world engineering across startups and product companies.',
+        content: `
+          <div class="panel-item">
+            <div class="item-title">SDE Intern — Company A</div>
+            <div class="item-sub">Jun 2024 – Dec 2024 · Remote<br/>Built REST APIs reducing latency by 40%. Shipped 3 features to production.</div>
+            <div style="margin-top:8px"><span class="badge badge-blue">Node.js</span><span class="badge badge-blue">PostgreSQL</span><span class="badge badge-blue">Docker</span></div>
+          </div>
+          <div class="panel-item">
+            <div class="item-title">Frontend Dev — Startup B</div>
+            <div class="item-sub">Jan 2024 – May 2024 · Hybrid<br/>Led UI redesign that improved user retention by 25%.</div>
+            <div style="margin-top:8px"><span class="badge badge-purple">React</span><span class="badge badge-purple">TypeScript</span><span class="badge badge-purple">Tailwind</span></div>
+          </div>
+          <div class="panel-item">
+            <div class="item-title">Open Source Contributor</div>
+            <div class="item-sub">Merged 8 PRs across major repos. Fixed critical bugs, added features.</div>
+          </div>
+        `
+      },
+      { id: 'edu', icon: '◎', label: 'Education', type: 'default', title: '🎓 Education', tag: 'ACADEMIC', tagColor: '#00d4ff',
+        desc: 'Strong CS foundation from a reputed engineering college.',
+        content: `
+          <div class="panel-item">
+            <div class="item-title">B.Tech — Computer Science</div>
+            <div class="item-sub">2021 – 2025 · CGPA: 8.9/10<br/>Specialization in AI/ML & Distributed Systems</div>
+            <div style="margin-top:8px"><span class="badge badge-blue">DSA</span><span class="badge badge-blue">OS</span><span class="badge badge-blue">DBMS</span><span class="badge badge-blue">Networks</span></div>
+          </div>
+          <div class="panel-item">
+            <div class="item-title">12th Grade — CBSE</div>
+            <div class="item-sub">96.4% · Computer Science + Math · School Rank #1</div>
+          </div>
+        `
+      }
+    ]
+  },
+  {
+    id: 'projects', label: 'PROJECTS', x: 62,
+    nodes: [
+      { id: 'proj1', icon: '◆', label: 'Project 1', type: 'default', title: '🚀 Featured Project', tag: 'PROJECTS', tagColor: '#00d4ff',
+        desc: 'Full-stack product shipped from 0 to 1.',
+        content: `
+          <div class="panel-item">
+            <div class="item-title">🌐 DevBoard — SaaS Dashboard</div>
+            <div class="item-sub">A real-time developer analytics platform. 200+ active users. Built solo in 3 weeks.</div>
+            <div style="margin-top:8px"><span class="badge badge-blue">Next.js</span><span class="badge badge-blue">Prisma</span><span class="badge badge-blue">PostgreSQL</span><span class="badge badge-green">Live ↗</span></div>
+          </div>
+          <div class="panel-item">
+            <div class="item-title">⛓️ ChainVault — Blockchain Wallet</div>
+            <div class="item-sub">Secure multi-chain crypto wallet with transaction history & gas estimator.</div>
+            <div style="margin-top:8px"><span class="badge badge-purple">Solidity</span><span class="badge badge-purple">Web3.js</span><span class="badge badge-purple">React</span></div>
+          </div>
+          <div class="panel-item">
+            <div class="item-title">🤖 NeuralChat — AI Chatbot</div>
+            <div class="item-sub">Fine-tuned LLM chatbot with RAG pipeline. 98% accuracy on domain queries.</div>
+            <div style="margin-top:8px"><span class="badge badge-yellow">Python</span><span class="badge badge-yellow">LangChain</span><span class="badge badge-yellow">FastAPI</span></div>
+          </div>
+        `
+      },
+      { id: 'proj2', icon: '◇', label: 'Project 2', type: 'default', title: '⚙️ More Projects', tag: 'PROJECTS', tagColor: '#00d4ff',
+        desc: 'Side projects, tools, and experiments.',
+        content: `
+          <div class="panel-item"><div class="item-title">📦 CLI Tool — DevLaunch</div><div class="item-sub">NPM package for scaffolding full-stack apps. 300+ downloads.</div></div>
+          <div class="panel-item"><div class="item-title">🎮 Mini Games with Three.js</div><div class="item-sub">3D browser games built for fun — shows WebGL & animation chops.</div></div>
+          <div class="panel-item"><div class="item-title">📊 DSA Visualizer</div><div class="item-sub">Interactive visualizations for 30+ algorithms. Used by 50+ students.</div></div>
+        `
+      }
+    ]
+  },
+  {
+    id: 'likes', label: 'WHAT I LIKE', x: 76,
+    nodes: [
+      { id: 'anime', icon: '🍃', label: 'Naruto', type: 'like', title: '🍃 Anime & Stories', tag: 'INTERESTS', tagColor: '#10b981',
+        desc: 'Naruto is my all-time favorite — the message of hard work beating talent hits different.',
+        content: `
+          <div class="panel-item"><div class="item-title">🍃 Naruto Fan</div><div class="item-sub">"I never give up. That's my ninja way." — This is also my engineering philosophy. Persistence over talent, every time.</div></div>
+          <div class="panel-item"><div class="item-title">📺 Other Favorites</div><div class="item-sub">Attack on Titan · Death Note · One Piece · Demon Slayer</div></div>
+          <div class="panel-item"><div class="item-title">Why this matters</div><div class="item-sub">Every great anime has a story arc — so does every great product. I bring narrative thinking to everything I build.</div></div>
+        `
+      },
+      { id: 'sports', icon: '🏓', label: 'Table Tennis', type: 'like', title: '🏓 Table Tennis', tag: 'INTERESTS', tagColor: '#10b981',
+        desc: 'Fast reflexes, quick decisions — TT is basically system design IRL.',
+        content: `
+          <div class="panel-item"><div class="item-title">🏓 Competitive Player</div><div class="item-sub">College TT team. District-level tournaments. Represent my department.</div></div>
+          <div class="panel-item"><div class="item-title">What TT taught me</div><div class="item-sub">Speed of thought · Adapting to opponents · Staying calm under pressure — all directly applicable to coding sprints and debugging.</div></div>
+        `
+      },
+      { id: 'tech', icon: '⛓', label: 'Blockchain', type: 'like', title: '⛓️ Tech I Geek Out On', tag: 'INTERESTS', tagColor: '#10b981',
+        desc: 'Blockchain, Three.js, AI — technologies that feel like magic.',
+        content: `
+          <div class="panel-item"><div class="item-title">⛓️ Blockchain & Web3</div><div class="item-sub">Fascinated by trustless systems. Built 2 blockchain projects. Exploring DeFi protocols.</div></div>
+          <div class="panel-item"><div class="item-title">🎨 Three.js & WebGL</div><div class="item-sub">Love making the web feel alive. This portfolio is proof.</div></div>
+          <div class="panel-item"><div class="item-title">🤖 AI/ML</div><div class="item-sub">Fine-tuning models, RAG pipelines, and building AI-native products.</div></div>
+          <div class="panel-item"><div class="item-title">🎵 Music While Coding</div><div class="item-sub">Lo-fi hip hop · Anime OSTs · Phonk — the holy trinity of focus.</div></div>
+        `
+      }
+    ]
+  },
+  {
+    id: 'output', label: 'OUTPUT', x: 91,
+    nodes: [
+      { id: 'connect', icon: '⬡', label: 'HIRE ME', type: 'output', title: '🎯 Output: Hire Balaji', tag: 'CONNECT', tagColor: '#ec4899',
+        desc: 'You\'ve run inference on me. The prediction is clear.',
+        content: `
+          <div style="text-align:center; margin-bottom:20px">
+            <div style="font-size:48px; margin-bottom:8px">🎯</div>
+            <div style="font-size:13px; color:var(--muted)">Confidence: <span style="color:#10b981; font-weight:700">98.7%</span></div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px">Model output: <em style="color:#ec4899">Strong Hire</em></div>
+          </div>
+          <div class="panel-item"><div class="item-title">📧 Email</div><div class="item-sub">skbalajimbl1@gmail.com</div></div>
+          <div class="panel-item"><div class="item-title">⏱️ Response Time</div><div class="item-sub">Within 24 hours, always.</div></div>
+          <div class="panel-item"><div class="item-title">✅ Available For</div><div class="item-sub"><span class="badge badge-pink">Full-time SWE</span><span class="badge badge-pink">Freelance</span><span class="badge badge-pink">Consulting</span><span class="badge badge-pink">Open Source</span></div></div>
+          <button class="connect-btn" onclick="window.location.href='mailto:skbalajimbl1@gmail.com'">⚡ Send Signal — Let's Connect</button>
+          <button class="connect-btn" style="margin-top:8px; background: linear-gradient(135deg,#0077b5,#00a0dc)" onclick="#">◈ Connect on LinkedIn</button>
+        `
+      }
+    ]
+  }
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let networkActive = false;
+let activeNode = null;
+
+// ─────────────────────────────────────────────
+//  INIT NETWORK
+// ─────────────────────────────────────────────
+function activateNetwork() {
+  document.getElementById('hero').classList.add('hidden');
+  const net = document.getElementById('network');
+  net.classList.add('visible');
+  document.getElementById('back-btn').classList.add('visible');
+  document.getElementById('legend').classList.add('visible');
+  networkActive = true;
+
+  setTimeout(() => buildNetwork(), 100);
+}
+
+function goBack() {
+  document.getElementById('hero').classList.remove('hidden');
+  const net = document.getElementById('network');
+  net.classList.remove('visible');
+  document.getElementById('back-btn').classList.remove('visible');
+  document.getElementById('legend').classList.remove('visible');
+  closePanel();
+  // Clear network
+  net.querySelectorAll('.node,.layer-label').forEach(el => el.remove());
+  document.getElementById('svg-lines').innerHTML = '';
+}
+
+function buildNetwork() {
+  const net = document.getElementById('network');
+  const svg = document.getElementById('svg-lines');
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+
+  // Place nodes
+  const positions = {};
+  LAYERS.forEach(layer => {
+    const lx = (layer.x / 100) * W;
+
+    // Label
+    const lbl = document.createElement('div');
+    lbl.className = 'layer-label';
+    lbl.style.left = lx + 'px';
+    lbl.textContent = layer.label;
+    net.appendChild(lbl);
+
+    const count = layer.nodes.length;
+    layer.nodes.forEach((node, i) => {
+      const yOffset = H * 0.5;
+      const spread = count === 1 ? 0 : (count === 2 ? 90 : 120);
+      const ly = yOffset + (i - (count - 1) / 2) * spread;
+
+      positions[node.id] = { x: lx, y: ly };
+
+      const el = document.createElement('div');
+      el.className = `node type-${node.type}`;
+      el.id = 'node-' + node.id;
+      el.style.left = lx + 'px';
+      el.style.top = ly + 'px';
+      el.innerHTML = `<span class="node-icon">${node.icon}</span><span class="node-label">${node.label}</span>`;
+      el.addEventListener('click', () => openPanel(node));
+      el.addEventListener('mouseenter', (e) => showTooltip(e, node.title));
+      el.addEventListener('mouseleave', hideTooltip);
+      net.appendChild(el);
+    });
+  });
+
+  // Draw lines
+  for (let i = 0; i < LAYERS.length - 1; i++) {
+    const fromLayer = LAYERS[i];
+    const toLayer = LAYERS[i + 1];
+    fromLayer.nodes.forEach(from => {
+      toLayer.nodes.forEach(to => {
+        const fp = positions[from.id];
+        const tp = positions[to.id];
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', fp.x); line.setAttribute('y1', fp.y);
+        line.setAttribute('x2', tp.x); line.setAttribute('y2', tp.y);
+        line.setAttribute('stroke', 'rgba(0,212,255,0.12)');
+        line.setAttribute('stroke-width', '1');
+        line.id = `line-${from.id}-${to.id}`;
+        svg.appendChild(line);
+      });
+    });
+  }
+
+  // Animate lines with a subtle data-flow particle effect via CSS trick
+  animateParticles(positions);
+}
+
+function animateParticles(positions) {
+  // Simple: cycle line opacity
+  setInterval(() => {
+    if (!networkActive) return;
+    LAYERS.forEach(layer => {
+      layer.nodes.forEach(n => {
+        const el = document.getElementById('node-' + n.id);
+        if (el && !el.classList.contains('active')) {
+          el.style.opacity = (0.7 + Math.random() * 0.3).toString();
+        }
+      });
+    });
+  }, 1800);
+}
+
+// ─────────────────────────────────────────────
+//  PANEL
+// ─────────────────────────────────────────────
+function openPanel(node) {
+  // Deactivate old
+  if (activeNode) {
+    const prev = document.getElementById('node-' + activeNode.id);
+    if (prev) prev.classList.remove('active');
+  }
+  activeNode = node;
+  const el = document.getElementById('node-' + node.id);
+  if (el) el.classList.add('active');
+
+  // Highlight lines
+  highlightLines(node.id);
+
+  const tagColorMap = { '#00d4ff': 'badge-blue', '#f59e0b': 'badge-yellow', '#10b981': 'badge-green', '#ec4899': 'badge-pink' };
+  const badgeClass = tagColorMap[node.tagColor] || 'badge-blue';
+
+  document.getElementById('panel-content').innerHTML = `
+    <div class="panel-tag" style="color:${node.tagColor}">⬡ ${node.tag}</div>
+    <div class="panel-title">${node.title}</div>
+    <div class="panel-desc">${node.desc}</div>
+    ${node.content}
+  `;
+  document.getElementById('panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('panel').classList.remove('open');
+  if (activeNode) {
+    const prev = document.getElementById('node-' + activeNode.id);
+    if (prev) prev.classList.remove('active');
+    activeNode = null;
+  }
+  resetLines();
+}
+
+function highlightLines(nodeId) {
+  const svg = document.getElementById('svg-lines');
+  svg.querySelectorAll('line').forEach(line => {
+    const id = line.id;
+    if (id.includes(nodeId)) {
+      line.setAttribute('stroke', 'rgba(0,212,255,0.7)');
+      line.setAttribute('stroke-width', '2');
+    } else {
+      line.setAttribute('stroke', 'rgba(0,212,255,0.05)');
+    }
+  });
+}
+
+function resetLines() {
+  const svg = document.getElementById('svg-lines');
+  svg.querySelectorAll('line').forEach(line => {
+    line.setAttribute('stroke', 'rgba(0,212,255,0.12)');
+    line.setAttribute('stroke-width', '1');
+  });
+}
+
+// ─────────────────────────────────────────────
+//  TOOLTIP
+// ─────────────────────────────────────────────
+function showTooltip(e, text) {
+  const t = document.getElementById('tooltip');
+  t.textContent = text;
+  t.style.left = (e.clientX + 14) + 'px';
+  t.style.top = (e.clientY - 10) + 'px';
+  t.classList.add('show');
+}
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+
+// ─────────────────────────────────────────────
+//  PARTICLE CANVAS BACKGROUND
+// ─────────────────────────────────────────────
+(function initCanvas() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'canvas';
+  document.body.prepend(canvas);
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = Array.from({length: 60}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.5 + 0.3,
+    dx: (Math.random() - 0.5) * 0.3,
+    dy: (Math.random() - 0.5) * 0.3,
+    alpha: Math.random() * 0.4 + 0.1
+  }));
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,212,255,${p.alpha})`;
+      ctx.fill();
+      p.x += p.dx; p.y += p.dy;
+      if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+    });
+    // Faint grid
+    ctx.strokeStyle = 'rgba(0,212,255,0.03)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 60) {
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 60) {
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+})();
+</script>
+</body>
+</html>

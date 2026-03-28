@@ -4,12 +4,6 @@ import SectionTitle from '../ui/SectionTitle'
 import { skillCategories } from '../../data/skills'
 import { fadeUpVariants, staggerContainer } from '../../utils/animations'
 
-const levelStyle: Record<string, { color: string; label: string }> = {
-  expert:    { color: 'var(--g-blue)',   label: 'Expert' },
-  proficient:{ color: 'var(--g-green)',  label: 'Proficient' },
-  familiar:  { color: 'var(--ag-muted)', label: 'Familiar' },
-}
-
 export default function Skills() {
   const { ref, inView } = useInView({ threshold: 0.08, triggerOnce: true })
 
@@ -23,21 +17,6 @@ export default function Skills() {
           title="Skills & Tools"
           subtitle="A breadth-first engineer with depth where it matters."
         />
-
-        {/* Legend */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.15 }}
-          className="flex items-center gap-6 mb-10"
-        >
-          {Object.entries(levelStyle).map(([key, { color, label }]) => (
-            <div key={key} className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full" style={{ background: color }} />
-              <span className="font-body text-sm" style={{ color: 'var(--ag-muted)' }}>{label}</span>
-            </div>
-          ))}
-        </motion.div>
 
         <motion.div
           variants={staggerContainer}
@@ -71,26 +50,24 @@ export default function Skills() {
                 </h3>
               </div>
 
-              {/* Skills list */}
-              <div className="space-y-2.5">
-                {cat.skills.map((skill, si) => {
-                  const { color, label } = levelStyle[skill.level]
-                  return (
-                    <motion.div
-                      key={skill.name}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={inView ? { opacity: 1, x: 0 } : {}}
-                      transition={{ delay: ci * 0.06 + si * 0.04 + 0.25, duration: 0.4 }}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
-                        <span className="font-body text-sm" style={{ color: 'var(--ag-text)' }}>{skill.name}</span>
-                      </div>
-                      <span className="font-mono text-xs" style={{ color, opacity: 0.8 }}>{label}</span>
-                    </motion.div>
-                  )
-                })}
+              {/* Skills as tags */}
+              <div className="flex flex-wrap gap-2">
+                {cat.skills.map((skill, si) => (
+                  <motion.span
+                    key={skill}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={inView ? { opacity: 1, scale: 1 } : {}}
+                    transition={{ delay: ci * 0.06 + si * 0.04 + 0.2, duration: 0.3 }}
+                    className="font-mono text-xs px-2.5 py-1 rounded-md"
+                    style={{
+                      color: cat.color,
+                      background: `color-mix(in srgb, ${cat.color} 10%, var(--ag-surface-2))`,
+                      border: `1px solid color-mix(in srgb, ${cat.color} 20%, transparent)`,
+                    }}
+                  >
+                    {skill}
+                  </motion.span>
+                ))}
               </div>
             </motion.div>
           ))}

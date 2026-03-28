@@ -11,6 +11,9 @@ export interface Project {
   metrics?: string[]
   color: string
   icon: string
+  collaborative?: boolean
+  collaborators?: string[]
+  noGithub?: boolean
 }
 
 export const projects: Project[] = [
@@ -18,7 +21,7 @@ export const projects: Project[] = [
     id: 'greencode',
     name: 'GreenCode Optimizer',
     tagline: 'AI-powered sustainable code optimization',
-    description: 'An AI tool leveraging GitLab Duo and Anthropic Claude to analyze codebases for energy efficiency and sustainability. Comes with 75 passing tests and automated CI pipeline integration.',
+    description: 'An AI tool leveraging GitLab Duo and Anthropic Claude to analyze codebases for energy efficiency and sustainability. Three-agent pipeline detecting 16 energy anti-patterns. Comes with 75 passing tests and automated CI pipeline integration.',
     language: 'Python',
     stack: ['Python', 'Anthropic Claude', 'GitLab Duo', 'CI/CD'],
     url: 'https://github.com/BALAJI-SK/GreenCode-Optimizer',
@@ -57,6 +60,51 @@ export const projects: Project[] = [
     icon: '⛓️',
   },
   {
+    id: 'rapid-response',
+    name: 'RapidResponse',
+    tagline: 'AI-powered 911 emergency dispatch system',
+    description: 'Real-time AI emergency dispatch platform using AWS Bedrock Nova Sonic for bidirectional voice triage. Classifies incidents P1–P4 in real-time, queries emergency protocols via vector search, and routes to dispatcher dashboard with live incident feed and call replay.',
+    language: 'TypeScript',
+    stack: ['TypeScript', 'AWS Bedrock', 'React', 'LanceDB', 'AWS ECS', 'Bun', 'WebSockets'],
+    url: 'https://github.com/pratheek-c/RapidResponse',
+    category: 'AI / Real-Time Systems',
+    featured: true,
+    metrics: ['P1–P4 incident classification', 'Real-time voice triage', 'RAG protocol lookup'],
+    color: '#FF4444',
+    icon: '🚨',
+    collaborative: true,
+    collaborators: ['pratheek-c'],
+  },
+  {
+    id: 'llm-benchmark',
+    name: 'LLM Benchmarking Framework',
+    tagline: 'Real-time client-side LLM evaluation tool',
+    description: 'Browser-based benchmarking framework built on Ancient Brain evaluating LLMs across 11 cognitive categories using contamination-resistant LiveBench methodology. Supports Llama 3.1 8B, Llama 3.3 70B, Qwen 3 32B/235B via Cerebras Inference API. Measures accuracy, token usage, and latency distribution (P95/P97/P99) with objective ground-truth grading.',
+    language: 'JavaScript',
+    stack: ['Ancient Brain', 'Cerebras API', 'JavaScript', 'LLM APIs', 'LiveBench'],
+    url: 'https://ancientbrain.com/world.php?world=1927931669',
+    category: 'AI / Research',
+    featured: true,
+    metrics: ['11 cognitive categories', '77 queries/session', 'P99 latency tracking'],
+    color: '#FF8C00',
+    icon: '🧠',
+    noGithub: true,
+  },
+  {
+    id: 'visual-shopper',
+    name: 'The Visual Shopper',
+    tagline: 'Predicting computer prices via user-facing features',
+    description: 'ML system predicting retail laptop prices using only 10 consumer-visible features (brand, screen, form factor) on 94,200 data points. XGBoost champion model achieves $173 MAE and 75.9% R² by engineering GPU Tiers and integrating ACSI Brand Reputation scores. Validated "Visual Shopper Hypothesis" — brand + form factor outpredicts raw specs.',
+    language: 'Python',
+    stack: ['Python', 'XGBoost', 'Scikit-learn', 'Pandas', 'Seaborn'],
+    url: 'https://github.com/BALAJI-SK/Predicting-Computer-Prices-via-Visual-User-Experience-Features',
+    category: 'ML / Data Science',
+    featured: false,
+    metrics: ['$173 MAE', 'R² = 0.759', '94,200 data points', '5-fold CV validated'],
+    color: '#54C5F8',
+    icon: '💻',
+  },
+  {
     id: 'retrofit',
     name: 'Irish Home Retrofit Prediction',
     tagline: 'ML-powered BER energy rating prediction',
@@ -88,13 +136,13 @@ export const projects: Project[] = [
     id: 'rhythm',
     name: 'The Immutable Rhythm',
     tagline: 'Testing a 19th-century market prediction model',
-    description: "Validates the Benner Cycle — Samuel Benner's 1875 market prediction model — using S&P 500, FTSE 100, and Bitcoin data. Examines whether 150-year-old market patterns still hold predictive power.",
+    description: "Validates the Benner Cycle — Samuel Benner's 1875 market prediction model — using S&P 500, FTSE 100, and Bitcoin data. Panic years averaged 21.09% returns vs 7.40% normal periods.",
     language: 'Jupyter Notebook',
-    stack: ['Python', 'Pandas', 'Matplotlib', 'Financial Data', 'Statistics'],
+    stack: ['Python', 'Pandas', 'Matplotlib', 'yfinance', 'Plotly'],
     url: 'https://github.com/BALAJI-SK/The-Immutable-Rhythm-Testing-a-19th-Century-Market-Prediction-Model',
     category: 'Data Science / Research',
     featured: false,
-    metrics: ['S&P 500, FTSE 100, Bitcoin', 'Benner Cycle (1875)', 'Multi-market analysis'],
+    metrics: ['S&P 500, FTSE 100, Bitcoin', 'Benner Cycle (1875)', '21.09% panic-year returns'],
     color: '#FFD700',
     icon: '📈',
   },

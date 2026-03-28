@@ -54,4 +54,23 @@ export const education: Education[] = [
     color: '#FF6B35',
     current: false,
   },
+  {
+    id: 'school',
+    institution: 'Gnana Jyothi School, Mulbagal',
+    logo: 'GJS',
+    degree: 'Indian Certificate of Secondary Education (ICSE)',
+    field: 'Class X — Science & Mathematics',
+    period: '2017',
+    grade: 'School First Rank',
+    grade_label: 'Ranked 1st in School · CISCE Board',
+    location: 'Mulbagal, Karnataka, India',
+    highlights: [
+      'Ranked 1st in school — ICSE Class X Board Examinations',
+      'Council for the Indian School Certificate Examinations (CISCE), New Delhi',
+      'Mathematics, Science & Computer Science',
+    ],
+    skills: ['Mathematics', 'Science', 'Computer Science'],
+    color: '#FFD700',
+    current: false,
+  },
 ]
