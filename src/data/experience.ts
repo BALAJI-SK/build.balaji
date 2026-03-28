@@ -12,9 +12,41 @@ export interface Experience {
   metrics: { label: string; value: string }[]
   skills: string[]
   color: string
+  upcoming?: boolean
+  startDate?: string   // ISO date for countdown
+  url?: string
 }
 
 export const experiences: Experience[] = [
+  {
+    id: 'uniswap-incubator',
+    company: 'Uniswap Hook Incubator — Cohort 9',
+    logo: 'UHI',
+    role: 'Builder / Participant',
+    type: 'Incubator · Grant-funded',
+    period: 'Apr 2026 – Jun 2026',
+    duration: '9 weeks',
+    location: 'Remote / Dublin',
+    description: 'Accepted into the Uniswap Hook Incubator (Cohort 9), a 9-week grant-funded program by Atrium Academy and Uniswap Foundation. 6 weeks of structured learning on Uniswap v4 Hooks — smart contracts that plug directly into the swap lifecycle for programmable liquidity, automated triggers, and dynamic fees. Followed by a 3-week hackathon phase focused on IL & yield systems, with $25k+ in prizes, culminating in a Demo Day in front of Uniswap and ecosystem partners.',
+    bullets: [
+      'Building on Uniswap v4 Hooks — smart contracts plugging into the swap lifecycle at protocol level',
+      'Cohort 9 theme: Impermanent Loss (IL) mitigation & yield optimization systems',
+      '6-week structured curriculum on best practices for hook development',
+      '3-week hackathon phase with $25k+ prize pool',
+      'Demo Day presentation in front of Uniswap Foundation and ecosystem partners',
+      'Program fully covered by a Uniswap Foundation grant',
+    ],
+    metrics: [
+      { label: 'Prize Pool', value: '$25k+' },
+      { label: 'Duration', value: '9 weeks' },
+      { label: 'Phase', value: 'Hackathon' },
+    ],
+    skills: ['Solidity', 'Uniswap v4', 'DeFi Hooks', 'Smart Contracts', 'IL Systems', 'Yield Strategies'],
+    color: '#FF007A',
+    upcoming: true,
+    startDate: '2026-04-09',
+    url: 'https://atrium.academy/uniswap',
+  },
   {
     id: 'superteam',
     company: 'Superteam Ireland',

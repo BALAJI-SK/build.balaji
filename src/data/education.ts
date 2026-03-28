@@ -22,6 +22,8 @@ export const education: Education[] = [
     degree: 'MSc in Computing',
     field: 'Artificial Intelligence',
     period: 'Sep 2025 – Sep 2026',
+    grade: '1:1 — First Class Honours',
+    grade_label: 'Semester 1 Result',
     location: 'Dublin, Ireland',
     highlights: [
       'Core Machine Learning & Deep Learning',
@@ -61,7 +63,7 @@ export const education: Education[] = [
     degree: 'Indian Certificate of Secondary Education (ICSE)',
     field: 'Class X — Science & Mathematics',
     period: '2017',
-    grade: 'School First Rank',
+    grade: '90.84% · School First Rank',
     grade_label: 'Ranked 1st in School · CISCE Board',
     location: 'Mulbagal, Karnataka, India',
     highlights: [

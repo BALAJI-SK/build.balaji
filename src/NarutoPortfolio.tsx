@@ -9,27 +9,28 @@ import { experiences } from './data/experience'
 import { projects } from './data/projects'
 import { education } from './data/education'
 import { skillCategories } from './data/skills'
+import { achievements } from './data/achievements'
 
 // ─── Color Tokens ────────────────────────────────────────────────────────────
 const C = {
-  void:        '#030507',
-  dark:        '#0a0f14',
-  surface:     '#0f1923',
-  surfaceHover:'#162030',
-  orange:      '#FF6B00',
+  void: '#030507',
+  dark: '#0a0f14',
+  surface: '#0f1923',
+  surfaceHover: '#162030',
+  orange: '#FF6B00',
   orangeLight: '#FF8C38',
-  orangeGlow:  'rgba(255,107,0,0.15)',
-  leaf:        '#3DBA6C',
-  leafDark:    '#2A8A4E',
-  leafGlow:    'rgba(61,186,108,0.12)',
-  chakra:      '#00C8FF',
-  chakraGlow:  'rgba(0,200,255,0.12)',
-  srank:       '#FFD700',
-  kage:        '#9945FF',
+  orangeGlow: 'rgba(255,107,0,0.15)',
+  leaf: '#3DBA6C',
+  leafDark: '#2A8A4E',
+  leafGlow: 'rgba(61,186,108,0.12)',
+  chakra: '#00C8FF',
+  chakraGlow: 'rgba(0,200,255,0.12)',
+  srank: '#FFD700',
+  kage: '#9945FF',
   textPrimary: '#F0EDE8',
-  textSecondary:'#8A9BAE',
-  textMuted:   '#4A5568',
-  border:      'rgba(255,107,0,0.15)',
+  textSecondary: '#8A9BAE',
+  textMuted: '#4A5568',
+  border: 'rgba(255,107,0,0.15)',
   borderHover: 'rgba(255,107,0,0.4)',
 }
 
@@ -341,7 +342,22 @@ export default function NarutoPortfolio() {
   const heroRef = useRef<HTMLDivElement>(null)
   const { scrollY } = useScroll()
   useMotionValueEvent(scrollY, 'change', (y) => {
-    setNavVisible(y > (heroRef.current?.offsetHeight ?? 600) * 0.8)
+    const heroH = heroRef.current?.offsetHeight ?? 600
+    setNavVisible(y > heroH * 0.8)
+
+    // Update active section based on scroll position
+    const sectionIds = ['village', 'ninja-way', 'academy', 'genin', 'chunin', 'jonin', 'missions', 'trophies', 'kage', 'jutsu', 'alliance']
+    for (let i = sectionIds.length - 1; i >= 0; i--) {
+      const el = document.getElementById(sectionIds[i])
+      if (el && y >= el.offsetTop - 120) {
+        // Map internal ids to nav ids
+        const navId = sectionIds[i] === 'genin' ? 'academy' :
+          ['chunin', 'jonin'].includes(sectionIds[i]) ? 'chunin' :
+          sectionIds[i] === 'kage' ? 'trophies' : sectionIds[i]
+        setActiveSection(navId)
+        break
+      }
+    }
   })
 
   const scrollTo = useCallback((id: string) => {
@@ -352,24 +368,25 @@ export default function NarutoPortfolio() {
   const [joninRef, joninInView] = useInView({ triggerOnce: true, threshold: 0.2 })
 
   const mckinsey = experiences.find(e => e.id === 'mckinsey')!
-  const tejas    = experiences.find(e => e.id === 'tejas')!
+  const tejas = experiences.find(e => e.id === 'tejas')!
   const superteam = experiences.find(e => e.id === 'superteam')!
-  const dcu      = education.find(e => e.id === 'dcu')!
-  const bms      = education.find(e => e.id === 'bms')!
+  const uniswap   = experiences.find(e => e.id === 'uniswap-incubator')!
 
-  const featuredProjects = projects.filter(p => p.featured)
-  const otherProjects    = projects.filter(p => !p.featured)
-  const greencode = featuredProjects.find(p => p.id === 'greencode')!
-  const lette     = featuredProjects.find(p => p.id === 'lette')!
-  const agent2    = featuredProjects.find(p => p.id === 'agent2')!
+  // Live vs upcoming for Uniswap
+  const uniswapLive = new Date() >= new Date(uniswap.startDate!)
+  const dcu = education.find(e => e.id === 'dcu')!
+  const bms = education.find(e => e.id === 'bms')!
+  const school = education.find(e => e.id === 'school')!
+
+  const otherProjects = projects.filter(p => !p.featured)
 
   const jutsuMap: Record<string, { jutsu: string; desc: string }> = {
-    'ai-ml':   { jutsu: 'Genjutsu',      desc: 'Mind Techniques' },
-    'systems': { jutsu: 'Taijutsu',      desc: 'Physical Mastery' },
-    'web':     { jutsu: 'Ninjutsu',      desc: 'Versatile Techniques' },
-    'mobile':  { jutsu: 'Medical Nin',   desc: 'Healing Tools' },
-    'devops':  { jutsu: 'Senjutsu',      desc: 'Sage Mode' },
-    'web3':    { jutsu: 'Kekkei Genkai', desc: 'Rare Bloodline' },
+    'ai-ml': { jutsu: 'Genjutsu', desc: 'Mind Techniques' },
+    'systems': { jutsu: 'Taijutsu', desc: 'Physical Mastery' },
+    'web': { jutsu: 'Ninjutsu', desc: 'Versatile Techniques' },
+    'mobile': { jutsu: 'Medical Nin', desc: 'Healing Tools' },
+    'devops': { jutsu: 'Senjutsu', desc: 'Sage Mode' },
+    'web3': { jutsu: 'Kekkei Genkai', desc: 'Rare Bloodline' },
   }
 
   const radarData = skillCategories.map(cat => ({
@@ -381,12 +398,14 @@ export default function NarutoPortfolio() {
   const handleDone = useCallback(() => setLoading(false), [])
 
   const navLinks = [
-    { id: 'village',  label: 'Village'   },
-    { id: 'ninja-way',label: 'Ninja Way' },
-    { id: 'academy',  label: 'Academy'   },
-    { id: 'missions', label: 'Missions'  },
-    { id: 'jutsu',    label: 'Jutsu'     },
-    { id: 'alliance', label: 'Alliance'  },
+    { id: 'village',  label: 'Village'       },
+    { id: 'ninja-way',label: 'Ninja Way'     },
+    { id: 'academy',  label: 'Ninja Academy' },
+    { id: 'chunin',   label: 'Experience'    },
+    { id: 'missions', label: 'Projects'      },
+    { id: 'trophies', label: 'Achievements'  },
+    { id: 'jutsu',    label: 'Jutsu'         },
+    { id: 'alliance', label: 'Alliance'      },
   ]
 
   return (
@@ -431,13 +450,30 @@ export default function NarutoPortfolio() {
                   onClick={() => { scrollTo(id); setActiveSection(id) }}
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer', padding: '16px 16px 14px',
-                    fontFamily: '"Inter", sans-serif', fontSize: 13, fontWeight: 500, letterSpacing: 1,
+                    fontFamily: '"Inter", sans-serif', fontWeight: 500, letterSpacing: 1,
                     color: activeSection === id ? C.orange : C.textSecondary,
                     borderBottom: activeSection === id ? `2px solid ${C.orange}` : '2px solid transparent',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
                   }}
                 >
-                  {label.toUpperCase()}
+                  {id === 'jutsu' ? (
+                    <>
+                      <span style={{ fontSize: 13 }}>JUTSU</span>
+                      <span style={{ fontSize: 9, opacity: 0.6, letterSpacing: 1 }}>SKILLS</span>
+                    </>
+                  ) : id === 'missions' ? (
+                    <>
+                      <span style={{ fontSize: 13 }}>PROJECTS</span>
+                      <span style={{ fontSize: 9, opacity: 0.6, letterSpacing: 1 }}>S-RANK MISSIONS</span>
+                    </>
+                  ) : id === 'chunin' ? (
+                    <>
+                      <span style={{ fontSize: 13 }}>EXPERIENCE</span>
+                      <span style={{ fontSize: 9, opacity: 0.6, letterSpacing: 1 }}>ARCS III & IV</span>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: 13 }}>{label.toUpperCase()}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -458,7 +494,7 @@ export default function NarutoPortfolio() {
         <div style={{ ...containerStyle, position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
           <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: loading ? 2.8 : 0.3 }}>
             <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.orange, letterSpacing: 6, textTransform: 'uppercase', marginBottom: 16 }}>
-              🍃 Hidden Leaf Portfolio
+              🍃 Hidden Leaf Shinobi
             </p>
             <h1 style={{
               fontFamily: '"Cinzel", serif', fontSize: 'clamp(32px, 6vw, 72px)', fontWeight: 900,
@@ -508,10 +544,10 @@ export default function NarutoPortfolio() {
             {/* Stat Cards */}
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
               {[
-                { value: '3+',  label: 'Years Exp',   icon: '⚔️', color: C.orange },
-                { value: '8+',  label: 'Jutsu Built', icon: '📜', color: C.leaf },
+                { value: '3+', label: 'Years Exp', icon: '⚔️', color: C.orange },
+                { value: '8+', label: 'Jutsu Built', icon: '📜', color: C.leaf },
                 { value: 'McK', label: 'S-Rank Firm', icon: '🏆', color: C.srank },
-                { value: 'DCU', label: 'MSc AI',      icon: '🎓', color: C.kage },
+                { value: 'DCU', label: 'MSc AI', icon: '🎓', color: C.kage },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
@@ -536,6 +572,7 @@ export default function NarutoPortfolio() {
               {[
                 { label: 'GitHub',   href: 'https://github.com/BALAJI-SK' },
                 { label: 'LinkedIn', href: 'https://www.linkedin.com/in/balaji-sk/' },
+                { label: 'X / Twitter', href: 'https://x.com/BalajiS20877995' },
                 { label: 'Email',    href: 'mailto:skbalajimbl1@gmail.com' },
               ].map(link => (
                 <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
@@ -571,9 +608,9 @@ export default function NarutoPortfolio() {
           {/* Interest Runes */}
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
             {[
-              { icon: '🏓', label: 'Table Tennis',  desc: 'Reflexes & calm under pressure',  color: C.chakra },
-              { icon: '🍃', label: 'Naruto',         desc: 'Hard work beats talent. Always.', color: C.orange },
-              { icon: '⛓️', label: 'Web3 & AI',      desc: 'The jutsu of the future',          color: C.kage },
+              { icon: '🏓', label: 'Table Tennis', desc: 'Reflexes & calm under pressure', color: C.chakra },
+              { icon: '🍃', label: 'Naruto', desc: 'Hard work beats talent. Always.', color: C.orange },
+              { icon: '⛓️', label: 'Web3 & AI', desc: 'The jutsu of the future', color: C.kage },
             ].map((item, i) => (
               <motion.div
                 key={item.label}
@@ -622,7 +659,13 @@ export default function NarutoPortfolio() {
               <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 6 }}>{dcu.institution}</h3>
               <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 14, color: C.kage, marginBottom: 4 }}>{dcu.degree} · {dcu.field}</p>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: C.textMuted, marginBottom: 4 }}>{dcu.period}</p>
-              <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textMuted, marginBottom: 20 }}>{dcu.location}</p>
+              <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textMuted, marginBottom: 14 }}>{dcu.location}</p>
+              {dcu.grade && (
+                <div style={{ background: `${C.kage}12`, border: `1px solid ${C.kage}30`, borderRadius: 8, padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                  <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, fontWeight: 700, color: C.kage }}>{dcu.grade}</span>
+                  <span style={{ fontFamily: '"Inter", sans-serif', fontSize: 11, color: C.textSecondary }}>{dcu.grade_label}</span>
+                </div>
+              )}
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.textSecondary, marginBottom: 12, letterSpacing: 2, textTransform: 'uppercase' }}>Core Scrolls</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {dcu.highlights.map(h => (
@@ -660,6 +703,39 @@ export default function NarutoPortfolio() {
                 ))}
               </div>
             </motion.div>
+
+            {/* School — 10th */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              whileHover={{ boxShadow: `0 0 30px ${C.srank}30` }}
+              style={cardStyle(`${C.srank}30`)}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                <div style={{ fontFamily: '"Cinzel", serif', fontSize: 28, fontWeight: 700, color: C.srank }}>{school.logo}</div>
+                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.srank, background: `${C.srank}18`, border: `1px solid ${C.srank}40`, borderRadius: 6, padding: '4px 10px', letterSpacing: 1 }}>🥇 SCHOOL TOPPER</span>
+              </div>
+              <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 18, fontWeight: 700, color: C.textPrimary, marginBottom: 6 }}>{school.institution}</h3>
+              <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 14, color: C.srank, marginBottom: 4 }}>{school.degree}</p>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: C.textMuted, marginBottom: 4 }}>{school.period}</p>
+              <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textMuted, marginBottom: 16 }}>{school.location}</p>
+              {school.grade && (
+                <div style={{ background: `${C.srank}12`, border: `1px solid ${C.srank}30`, borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
+                  <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 16, fontWeight: 700, color: C.srank }}>{school.grade}</div>
+                  <div style={{ fontFamily: '"Inter", sans-serif', fontSize: 12, color: C.textSecondary, marginTop: 2 }}>{school.grade_label}</div>
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {school.highlights.map(h => (
+                  <div key={h} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <span style={{ color: C.srank, fontSize: 10, marginTop: 3, flexShrink: 0 }}>✦</span>
+                    <span style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary }}>{h}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -671,40 +747,79 @@ export default function NarutoPortfolio() {
           <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 15, color: C.textMuted, fontStyle: 'italic', marginBottom: 48, marginTop: -32 }}>
             "First missions. Learning the ropes."
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-            {otherProjects.slice(0, 3).map((proj, i) => {
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 48 }}>
+            {['college-space', 'ddos', 'rhythm'].map((id, i) => {
+              const proj = projects.find(p => p.id === id)!
               const ranks: Record<string, string> = { 'college-space': 'D', 'ddos': 'C', 'rhythm': 'C' }
-              const rank = ranks[proj.id] ?? 'C'
               return (
                 <motion.div
                   key={proj.id}
                   {...scrollReveal}
                   transition={{ ...scrollReveal.transition, delay: i * 0.12 }}
                   whileHover={{ y: -4, boxShadow: `0 8px 30px ${proj.color}25` }}
-                  style={{ ...cardStyle(`${proj.color}25`), cursor: 'default' }}
+                  style={{ ...cardStyle(`${proj.color}25`), display: 'flex', flexDirection: 'column' }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <span style={{ fontSize: 28 }}>{proj.icon}</span>
-                    <MissionRank rank={rank} />
+                    <MissionRank rank={ranks[proj.id] ?? 'C'} />
                   </div>
                   <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 16, fontWeight: 700, color: C.textPrimary, marginBottom: 6 }}>{proj.name}</h3>
-                  <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, marginBottom: 16, lineHeight: 1.6 }}>{proj.tagline}</p>
+                  <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, marginBottom: 16, lineHeight: 1.6, flex: 1 }}>{proj.tagline}</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
                     {proj.stack.map(s => (
-                      <span key={s} style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.textMuted, background: `${C.surface}`, border: `1px solid ${C.border}`, borderRadius: 4, padding: '2px 8px' }}>{s}</span>
+                      <span key={s} style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.textMuted, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 4, padding: '2px 8px' }}>{s}</span>
                     ))}
                   </div>
                   <a href={proj.url} target="_blank" rel="noopener noreferrer"
-                    style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: proj.color, display: 'flex', alignItems: 'center', gap: 4 }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.7' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
-                  >
-                    ↗ GitHub
-                  </a>
+                    style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: proj.color, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                  >↗ GitHub</a>
                 </motion.div>
               )
             })}
           </div>
+
+          {/* CTA → S-Rank Missions */}
+          <motion.div
+            {...scrollReveal}
+            style={{ textAlign: 'center' }}
+          >
+            <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 14, color: C.textMuted, marginBottom: 16 }}>
+              These were just the warm-up missions.
+            </p>
+            <button
+              onClick={() => scrollTo('missions')}
+              style={{
+                background: `linear-gradient(135deg, ${C.orange}20, ${C.srank}20)`,
+                border: `1px solid ${C.orange}50`,
+                borderRadius: 12, padding: '16px 36px', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 12,
+                transition: 'all 0.25s',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.background = `linear-gradient(135deg, ${C.orange}35, ${C.srank}35)`
+                el.style.borderColor = C.orange
+                el.style.transform = 'translateY(-2px)'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.background = `linear-gradient(135deg, ${C.orange}20, ${C.srank}20)`
+                el.style.borderColor = `${C.orange}50`
+                el.style.transform = 'none'
+              }}
+            >
+              <span style={{ fontFamily: '"Cinzel", serif', fontSize: 15, fontWeight: 700, color: C.srank, letterSpacing: 2 }}>
+                ⭐ VIEW S-RANK MISSIONS
+              </span>
+              <motion.span
+                animate={{ y: [0, 5, 0] }}
+                transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                style={{ fontSize: 18, display: 'inline-block' }}
+              >
+                ↓
+              </motion.span>
+            </button>
+          </motion.div>
         </div>
       </section>
 
@@ -850,70 +965,83 @@ export default function NarutoPortfolio() {
             "The ones they said couldn't be done."
           </p>
 
-          {/* GreenCode — Full width hero card */}
-          <motion.div
-            {...scrollReveal}
-            whileHover={{ boxShadow: `0 0 60px ${greencode.color}30` }}
-            style={{ ...cardStyle(`${greencode.color}50`), marginBottom: 24, background: `linear-gradient(135deg, ${C.surface}, ${C.dark})` }}
-          >
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <span style={{ fontSize: 40 }}>{greencode.icon}</span>
-                <div>
-                  <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 24, fontWeight: 700, color: C.textPrimary }}>{greencode.name}</h3>
-                  <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 14, color: greencode.color, marginTop: 4 }}>{greencode.tagline}</p>
+          {/* RapidResponse — Hero full-width card */}
+          {(() => {
+            const hero = projects.find(p => p.id === 'rapid-response')!
+            return (
+              <motion.div
+                {...scrollReveal}
+                whileHover={{ boxShadow: `0 0 60px ${hero.color}30` }}
+                style={{ ...cardStyle(`${hero.color}50`), marginBottom: 24, background: `linear-gradient(135deg, ${C.surface}, ${C.dark})` }}
+              >
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <span style={{ fontSize: 40 }}>{hero.icon}</span>
+                    <div>
+                      <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 24, fontWeight: 700, color: C.textPrimary }}>{hero.name}</h3>
+                      <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 14, color: hero.color, marginTop: 4 }}>{hero.tagline}</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    {hero.collaborative && (
+                      <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.chakra, background: `${C.chakra}15`, border: `1px solid ${C.chakra}30`, borderRadius: 6, padding: '4px 10px' }}>
+                        👥 Collaborative
+                      </span>
+                    )}
+                    <span style={{ fontSize: 16 }}>⭐</span>
+                    <MissionRank rank="S" />
+                  </div>
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 16 }}>⭐</span>
-                <MissionRank rank="S" />
-              </div>
-            </div>
-            <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 15, color: C.textSecondary, lineHeight: 1.7, marginBottom: 20 }}>{greencode.description}</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-              {greencode.metrics?.map(m => (
-                <span key={m} style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: greencode.color, background: `${greencode.color}15`, border: `1px solid ${greencode.color}30`, borderRadius: 6, padding: '4px 12px' }}>{m}</span>
-              ))}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-              {greencode.stack.map(s => <JutsuTag key={s} label={s} color={greencode.color} />)}
-            </div>
-            <a href={greencode.url} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `${greencode.color}20`, border: `1px solid ${greencode.color}50`, color: greencode.color, padding: '10px 20px', borderRadius: 8, fontFamily: '"Inter", sans-serif', fontSize: 14, fontWeight: 600, transition: 'all 0.2s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${greencode.color}35` }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `${greencode.color}20` }}
-            >
-              ↗ View Mission Report
-            </a>
-          </motion.div>
+                <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 15, color: C.textSecondary, lineHeight: 1.7, marginBottom: 20 }}>{hero.description}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                  {hero.metrics?.map(m => (
+                    <span key={m} style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: hero.color, background: `${hero.color}15`, border: `1px solid ${hero.color}30`, borderRadius: 6, padding: '4px 12px' }}>{m}</span>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                  {hero.stack.map(s => <JutsuTag key={s} label={s} color={hero.color} />)}
+                </div>
+                <a href={hero.url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `${hero.color}20`, border: `1px solid ${hero.color}50`, color: hero.color, padding: '10px 20px', borderRadius: 8, fontFamily: '"Inter", sans-serif', fontSize: 14, fontWeight: 600, transition: 'all 0.2s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${hero.color}35` }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `${hero.color}20` }}
+                >
+                  ↗ View on GitHub
+                </a>
+              </motion.div>
+            )
+          })()}
 
-          {/* Lette + Agent2 side by side */}
+          {/* S-rank grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, marginBottom: 32 }}>
-            {[lette, agent2].map((proj, i) => (
+            {projects.filter(p => p.featured && p.id !== 'rapid-response').map((proj, i) => (
               <motion.div
                 key={proj.id}
                 {...scrollReveal}
-                transition={{ ...scrollReveal.transition, delay: i * 0.15 }}
+                transition={{ ...scrollReveal.transition, delay: i * 0.1 }}
                 whileHover={{ y: -4, boxShadow: `0 8px 40px ${proj.color}30` }}
-                style={cardStyle(`${proj.color}35`)}
+                style={{ ...cardStyle(`${proj.color}35`), display: 'flex', flexDirection: 'column' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <span style={{ fontSize: 32 }}>{proj.icon}</span>
                   <MissionRank rank="S" />
                 </div>
-                <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 18, fontWeight: 700, color: C.textPrimary, marginBottom: 6 }}>{proj.name}</h3>
-                <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, marginBottom: 16, lineHeight: 1.6 }}>{proj.description}</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+                <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 17, fontWeight: 700, color: C.textPrimary, marginBottom: 4 }}>{proj.name}</h3>
+                <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: proj.color, marginBottom: 10 }}>{proj.tagline}</p>
+                <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, marginBottom: 14, lineHeight: 1.6, flex: 1 }}>{proj.description}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                   {proj.metrics?.map(m => (
                     <span key={m} style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: proj.color, background: `${proj.color}12`, border: `1px solid ${proj.color}25`, borderRadius: 4, padding: '2px 8px' }}>{m}</span>
                   ))}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                   {proj.stack.map(s => <JutsuTag key={s} label={s} color={proj.color} />)}
                 </div>
                 <a href={proj.url} target="_blank" rel="noopener noreferrer"
-                  style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: proj.color, display: 'flex', alignItems: 'center', gap: 4 }}
-                >↗ GitHub</a>
+                  style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: proj.color, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                >
+                  {proj.noGithub ? '↗ View Live' : '↗ GitHub'}
+                </a>
               </motion.div>
             ))}
           </div>
@@ -923,7 +1051,7 @@ export default function NarutoPortfolio() {
             <button
               onClick={() => setExpandedProjects(e => !e)}
               style={{
-                background: `${C.surface}`, border: `1px solid ${C.border}`, borderRadius: 10,
+                background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10,
                 color: C.textSecondary, padding: '14px 28px', cursor: 'pointer', width: '100%',
                 fontFamily: '"Inter", sans-serif', fontSize: 14, letterSpacing: 1, transition: 'all 0.2s', marginBottom: 16,
               }}
@@ -953,7 +1081,7 @@ export default function NarutoPortfolio() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                           <span style={{ fontSize: 24 }}>{proj.icon}</span>
-                          <MissionRank rank={['retrofit', 'solas'].includes(proj.id) ? 'B' : 'C'} />
+                          <MissionRank rank={['retrofit', 'solas', 'visual-shopper'].includes(proj.id) ? 'B' : 'C'} />
                         </div>
                         <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 15, fontWeight: 700, color: C.textPrimary, marginBottom: 6 }}>{proj.name}</h3>
                         <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, marginBottom: 12, lineHeight: 1.5 }}>{proj.tagline}</p>
@@ -970,6 +1098,73 @@ export default function NarutoPortfolio() {
               )}
             </AnimatePresence>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ── ACHIEVEMENTS / TROPHIES ── */}
+      <section id="trophies" style={sectionStyle(C.dark)}>
+        <div style={containerStyle}>
+          <ArcLabel title="TROPHIES & HONOURS" />
+          <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 15, color: C.textMuted, fontStyle: 'italic', marginBottom: 48, marginTop: -32 }}>
+            "The battles that proved the ninja way."
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+            {achievements.map((a, i) => (
+              <motion.div
+                key={a.id}
+                {...scrollReveal}
+                transition={{ ...scrollReveal.transition, delay: i * 0.12 }}
+                whileHover={{ y: -4, boxShadow: `0 8px 40px ${a.color}30` }}
+                style={{ ...cardStyle(`${a.color}35`), position: 'relative' }}
+              >
+                {/* Rank badge top-right */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                  <span style={{ fontSize: 32 }}>{a.icon}</span>
+                  <span style={{
+                    fontFamily: '"JetBrains Mono", monospace', fontSize: 11, fontWeight: 700,
+                    color: a.color, background: `${a.color}18`, border: `1px solid ${a.color}40`,
+                    borderRadius: 6, padding: '4px 10px', letterSpacing: 1, whiteSpace: 'nowrap',
+                  }}>
+                    {a.prize ?? a.rank}
+                  </span>
+                </div>
+
+                <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 16, fontWeight: 700, color: C.textPrimary, marginBottom: 4 }}>{a.title}</h3>
+                <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: a.color, marginBottom: 4 }}>{a.issuer}</p>
+                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.textMuted, marginBottom: 12 }}>{a.date}{a.location ? ` · ${a.location}` : ''}</p>
+
+                {a.project && (
+                  <div style={{ background: `${a.color}10`, border: `1px solid ${a.color}25`, borderRadius: 8, padding: '8px 12px', marginBottom: 12 }}>
+                    <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.textMuted, letterSpacing: 1 }}>PROJECT: </span>
+                    <span style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textPrimary, fontWeight: 600 }}>{a.project}</span>
+                  </div>
+                )}
+
+                <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, lineHeight: 1.6, marginBottom: a.teammates ? 12 : 0 }}>{a.description}</p>
+
+                {a.participants && (
+                  <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.textMuted, marginBottom: 8 }}>👥 {a.participants}</p>
+                )}
+
+                {a.teammates && a.teammates.length > 0 && (
+                  <div style={{ marginBottom: a.url ? 12 : 0 }}>
+                    <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: C.textMuted, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>Team</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {a.teammates.map(t => (
+                        <span key={t} style={{ fontFamily: '"Inter", sans-serif', fontSize: 12, color: C.textSecondary, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 4, padding: '2px 8px' }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {a.url && (
+                  <a href={a.url} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: '"Inter", sans-serif', fontSize: 13, color: a.color, marginTop: 12 }}
+                  >↗ View</a>
+                )}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -1023,6 +1218,55 @@ export default function NarutoPortfolio() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {superteam.skills.map(s => <JutsuTag key={s} label={s} color={C.kage} />)}
               </div>
+            </motion.div>
+
+            {/* Uniswap Hook Incubator */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              whileHover={{ boxShadow: `0 0 40px ${uniswap.color}30` }}
+              style={{ ...cardStyle(`${uniswap.color}40`), gridColumn: 'span 1' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <span style={{ fontFamily: '"Cinzel", serif', fontSize: 22, fontWeight: 700, color: uniswap.color }}>{uniswap.logo}</span>
+                {uniswapLive ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.leaf}15`, border: `1px solid ${C.leaf}40`, borderRadius: 6, padding: '4px 10px' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.leaf, display: 'inline-block', animation: 'pulse-dot 1.5s infinite' }} />
+                    <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.leaf, letterSpacing: 1 }}>LIVE</span>
+                  </div>
+                ) : (
+                  <div style={{ background: `${uniswap.color}15`, border: `1px solid ${uniswap.color}40`, borderRadius: 6, padding: '4px 10px' }}>
+                    <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: uniswap.color, letterSpacing: 1 }}>⏳ STARTS APR 9</span>
+                  </div>
+                )}
+              </div>
+              <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 17, fontWeight: 700, color: C.textPrimary, marginBottom: 4 }}>{uniswap.company}</h3>
+              <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: uniswap.color, marginBottom: 4 }}>{uniswap.role} · {uniswap.type}</p>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: C.textMuted, marginBottom: 14 }}>{uniswap.period} · {uniswap.duration}</p>
+
+              {/* Prize highlight */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+                {uniswap.metrics.map(m => (
+                  <div key={m.label} style={{ background: `${uniswap.color}12`, border: `1px solid ${uniswap.color}30`, borderRadius: 8, padding: '6px 12px', textAlign: 'center' }}>
+                    <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, fontWeight: 700, color: uniswap.color }}>{m.value}</div>
+                    <div style={{ fontFamily: '"Inter", sans-serif', fontSize: 10, color: C.textMuted, marginTop: 1 }}>{m.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, lineHeight: 1.65, marginBottom: 16 }}>
+                Building Uniswap v4 Hooks — smart contracts plugging into the swap lifecycle for programmable liquidity &amp; dynamic fees. Cohort theme: <span style={{ color: uniswap.color, fontWeight: 600 }}>IL mitigation &amp; yield systems</span>. Grant-funded by Uniswap Foundation.
+              </p>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+                {uniswap.skills.map(s => <JutsuTag key={s} label={s} color={uniswap.color} />)}
+              </div>
+
+              <a href={uniswap.url} target="_blank" rel="noopener noreferrer"
+                style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: uniswap.color, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              >↗ atrium.academy/uniswap</a>
             </motion.div>
           </div>
 
@@ -1190,6 +1434,11 @@ export default function NarutoPortfolio() {
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = C.chakra; (e.currentTarget as HTMLElement).style.color = C.chakra }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.textPrimary }}
             >◈ LinkedIn</a>
+            <a href="https://x.com/BalajiS20877995" target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: C.textPrimary, border: `1px solid ${C.border}`, padding: '14px 32px', borderRadius: 10, fontWeight: 600, fontSize: 15, transition: 'all 0.2s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = C.textSecondary; (e.currentTarget as HTMLElement).style.color = C.textSecondary }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.textPrimary }}
+            >𝕏 Twitter</a>
             <a href="https://github.com/BALAJI-SK" target="_blank" rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: C.textPrimary, border: `1px solid ${C.border}`, padding: '14px 32px', borderRadius: 10, fontWeight: 600, fontSize: 15, transition: 'all 0.2s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = C.leaf; (e.currentTarget as HTMLElement).style.color = C.leaf }}

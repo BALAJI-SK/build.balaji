@@ -54,7 +54,7 @@ export const projects: Project[] = [
     stack: ['FastAPI', 'Python', 'Solana', 'Helius RPC', 'Web3'],
     url: 'https://github.com/BALAJI-SK/agent-2',
     category: 'Web3 / AI',
-    featured: true,
+    featured: false,
     metrics: ['GitHub + StackOverflow + Solana', 'DeFi credit scoring', 'NFT verification'],
     color: '#9945FF',
     icon: '⛓️',
