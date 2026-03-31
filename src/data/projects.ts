@@ -8,6 +8,7 @@ export interface Project {
   url: string
   category: string
   featured: boolean
+  arank?: boolean
   metrics?: string[]
   color: string
   icon: string
@@ -114,6 +115,7 @@ export const projects: Project[] = [
     url: 'https://github.com/BALAJI-SK/irish-home-retrofit-prediction',
     category: 'ML / Data Science',
     featured: false,
+    arank: true,
     metrics: ['1.35M row dataset', '215 → 45 features (leakage-safe)', 'BER prediction'],
     color: '#FF6B35',
     icon: '🏡',

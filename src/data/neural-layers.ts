@@ -72,7 +72,7 @@ export const NEURAL_LAYERS: NeuralLayer[] = [
         content: `
           <div class="panel-item">
             <div class="item-title">Profile</div>
-            <a href="https://www.linkedin.com/in/balaji-sk/" target="_blank" rel="noopener" class="node-link">↗ linkedin.com/in/balaji-sk</a>
+            <a href="https://www.linkedin.com/in/s-k-balaji/" target="_blank" rel="noopener" class="node-link">↗ linkedin.com/in/balaji-sk</a>
             <div class="item-sub" style="margin-top:8px">Actively posting about AI/ML, Web3, and building in public. Open to connect.</div>
           </div>
         `
@@ -286,7 +286,7 @@ export const NEURAL_LAYERS: NeuralLayer[] = [
           <div class="panel-item"><div class="item-title">⏱️ Response Time</div><div class="item-sub">Within 24 hours, always.</div></div>
           <div class="panel-item"><div class="item-title">✅ Available For</div><div class="item-sub"><span class="badge badge-pink">Full-time SWE</span><span class="badge badge-pink">AI/ML Roles</span><span class="badge badge-pink">Web3 Projects</span><span class="badge badge-pink">Consulting</span></div></div>
           <button class="connect-btn" onclick="window.location.href='mailto:skbalajimbl1@gmail.com'">⚡ Send Signal — Let's Connect</button>
-          <button class="connect-btn" style="margin-top:8px; background: linear-gradient(135deg,#0077b5,#00a0dc)" onclick="window.open('https://www.linkedin.com/in/balaji-sk/','_blank')">◈ Connect on LinkedIn</button>
+          <button class="connect-btn" style="margin-top:8px; background: linear-gradient(135deg,#0077b5,#00a0dc)" onclick="window.open('https://www.linkedin.com/in/s-k-balaji/','_blank')">◈ Connect on LinkedIn</button>
           <button class="connect-btn" style="margin-top:8px; background: linear-gradient(135deg,#1a1a2e,#16213e); border:1px solid rgba(255,255,255,0.1)" onclick="window.open('https://github.com/BALAJI-SK','_blank')">⌥ GitHub Profile</button>
         `
       }

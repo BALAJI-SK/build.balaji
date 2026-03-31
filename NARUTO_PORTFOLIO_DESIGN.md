@@ -658,7 +658,7 @@ const jutsuMap = {
 // Hardcoded contact info
 const contact = {
   email: 'skbalajimbl1@gmail.com',
-  linkedin: 'https://www.linkedin.com/in/balaji-sk/',
+  linkedin: 'https://www.linkedin.com/in/s-k-balaji/',
   github: 'https://github.com/BALAJI-SK',
   location: 'Dublin, Ireland',
   responseTime: '< 24 hours',

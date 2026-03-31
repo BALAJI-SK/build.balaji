@@ -353,7 +353,7 @@ export default function NarutoPortfolio() {
         // Map internal ids to nav ids
         const navId = sectionIds[i] === 'genin' ? 'academy' :
           ['chunin', 'jonin'].includes(sectionIds[i]) ? 'chunin' :
-          sectionIds[i] === 'kage' ? 'trophies' : sectionIds[i]
+            sectionIds[i] === 'kage' ? 'trophies' : sectionIds[i]
         setActiveSection(navId)
         break
       }
@@ -370,7 +370,7 @@ export default function NarutoPortfolio() {
   const mckinsey = experiences.find(e => e.id === 'mckinsey')!
   const tejas = experiences.find(e => e.id === 'tejas')!
   const superteam = experiences.find(e => e.id === 'superteam')!
-  const uniswap   = experiences.find(e => e.id === 'uniswap-incubator')!
+  const uniswap = experiences.find(e => e.id === 'uniswap-incubator')!
 
   // Live vs upcoming for Uniswap
   const uniswapLive = new Date() >= new Date(uniswap.startDate!)
@@ -378,7 +378,8 @@ export default function NarutoPortfolio() {
   const bms = education.find(e => e.id === 'bms')!
   const school = education.find(e => e.id === 'school')!
 
-  const otherProjects = projects.filter(p => !p.featured)
+  const arankProjects = projects.filter(p => p.arank)
+  const otherProjects = projects.filter(p => !p.featured && !p.arank)
 
   const jutsuMap: Record<string, { jutsu: string; desc: string }> = {
     'ai-ml': { jutsu: 'Genjutsu', desc: 'Mind Techniques' },
@@ -398,14 +399,14 @@ export default function NarutoPortfolio() {
   const handleDone = useCallback(() => setLoading(false), [])
 
   const navLinks = [
-    { id: 'village',  label: 'Village'       },
-    { id: 'ninja-way',label: 'Ninja Way'     },
-    { id: 'academy',  label: 'Ninja Academy' },
-    { id: 'chunin',   label: 'Experience'    },
-    { id: 'missions', label: 'Projects'      },
-    { id: 'trophies', label: 'Achievements'  },
-    { id: 'jutsu',    label: 'Jutsu'         },
-    { id: 'alliance', label: 'Alliance'      },
+    { id: 'village', label: 'Village' },
+    { id: 'ninja-way', label: 'Ninja Way' },
+    { id: 'academy', label: 'Ninja Academy' },
+    { id: 'chunin', label: 'Experience' },
+    { id: 'missions', label: 'Projects' },
+    { id: 'trophies', label: 'Achievements' },
+    { id: 'jutsu', label: 'Jutsu' },
+    { id: 'alliance', label: 'Alliance' },
   ]
 
   return (
@@ -524,7 +525,7 @@ export default function NarutoPortfolio() {
                 ⚡ Enter the Village
               </button>
               <a
-                href="https://drive.google.com/file/d/1M_K62aXr1OVW0Ds5O9XkA_eObZYyY8nQ/view"
+                href="https://drive.google.com/file/d/1SCvCE9lD2O5ho8-PyizVnhvl-CRPXuUZ/view?usp=sharing"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -570,10 +571,10 @@ export default function NarutoPortfolio() {
             {/* Social */}
             <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
               {[
-                { label: 'GitHub',   href: 'https://github.com/BALAJI-SK' },
-                { label: 'LinkedIn', href: 'https://www.linkedin.com/in/balaji-sk/' },
+                { label: 'GitHub', href: 'https://github.com/BALAJI-SK' },
+                { label: 'LinkedIn', href: 'https://www.linkedin.com/in/s-k-balaji/' },
                 { label: 'X / Twitter', href: 'https://x.com/BalajiS20877995' },
-                { label: 'Email',    href: 'mailto:skbalajimbl1@gmail.com' },
+                { label: 'Email', href: 'mailto:skbalajimbl1@gmail.com' },
               ].map(link => (
                 <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
                   style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, letterSpacing: 2, textTransform: 'uppercase', transition: 'color 0.2s' }}
@@ -1046,6 +1047,45 @@ export default function NarutoPortfolio() {
             ))}
           </div>
 
+          {/* A-rank section */}
+          {arankProjects.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: C.orange, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16 }}>⬛ A-RANK MISSIONS</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+                {arankProjects.map((proj, i) => (
+                  <motion.div
+                    key={proj.id}
+                    {...scrollReveal}
+                    transition={{ ...scrollReveal.transition, delay: i * 0.1 }}
+                    whileHover={{ y: -4, boxShadow: `0 8px 40px ${proj.color}30` }}
+                    style={{ ...cardStyle(`${proj.color}25`), display: 'flex', flexDirection: 'column' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                      <span style={{ fontSize: 32 }}>{proj.icon}</span>
+                      <MissionRank rank="A" />
+                    </div>
+                    <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 17, fontWeight: 700, color: C.textPrimary, marginBottom: 4 }}>{proj.name}</h3>
+                    <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: proj.color, marginBottom: 10 }}>{proj.tagline}</p>
+                    <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, marginBottom: 14, lineHeight: 1.6, flex: 1 }}>{proj.description}</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                      {proj.metrics?.map(m => (
+                        <span key={m} style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: proj.color, background: `${proj.color}12`, border: `1px solid ${proj.color}25`, borderRadius: 4, padding: '2px 8px' }}>{m}</span>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                      {proj.stack.map(s => <JutsuTag key={s} label={s} color={proj.color} />)}
+                    </div>
+                    <a href={proj.url} target="_blank" rel="noopener noreferrer"
+                      style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: proj.color, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    >
+                      {proj.noGithub ? '↗ View Live' : '↗ GitHub'}
+                    </a>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* More missions collapsible */}
           <motion.div {...scrollReveal}>
             <button
@@ -1081,7 +1121,7 @@ export default function NarutoPortfolio() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                           <span style={{ fontSize: 24 }}>{proj.icon}</span>
-                          <MissionRank rank={['retrofit', 'solas', 'visual-shopper'].includes(proj.id) ? 'B' : 'C'} />
+                          <MissionRank rank={['solas', 'visual-shopper'].includes(proj.id) ? 'B' : 'C'} />
                         </div>
                         <h3 style={{ fontFamily: '"Cinzel", serif', fontSize: 15, fontWeight: 700, color: C.textPrimary, marginBottom: 6 }}>{proj.name}</h3>
                         <p style={{ fontFamily: '"Inter", sans-serif', fontSize: 13, color: C.textSecondary, marginBottom: 12, lineHeight: 1.5 }}>{proj.tagline}</p>
@@ -1429,7 +1469,7 @@ export default function NarutoPortfolio() {
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.15)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; (e.currentTarget as HTMLElement).style.transform = 'none' }}
             >⚡ Send a Scroll</a>
-            <a href="https://www.linkedin.com/in/balaji-sk/" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.linkedin.com/in/s-k-balaji/" target="_blank" rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: C.textPrimary, border: `1px solid ${C.border}`, padding: '14px 32px', borderRadius: 10, fontWeight: 600, fontSize: 15, transition: 'all 0.2s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = C.chakra; (e.currentTarget as HTMLElement).style.color = C.chakra }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.textPrimary }}
