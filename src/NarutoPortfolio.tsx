@@ -525,7 +525,7 @@ export default function NarutoPortfolio() {
                 ⚡ Enter the Village
               </button>
               <a
-                href="https://drive.google.com/file/d/1SCvCE9lD2O5ho8-PyizVnhvl-CRPXuUZ/view?usp=sharing"
+                href="https://drive.google.com/file/d/1uogydRql6or5AaAYuL2LgSXoEr0K0GJL/view?usp=sharing"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
